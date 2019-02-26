@@ -59,7 +59,7 @@ def upload_file():
         return "File extension not allowed"
 
     content = file.read()
-    text = vision.load_document(content)
+    text = vision.load_document(content).text
 
     sentenceList = Sentence.seperate_sentences(text)
     sentenceList = Sentence.update_subject(sentenceList)

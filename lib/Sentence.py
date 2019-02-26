@@ -12,6 +12,10 @@ class Sentence:
     __subject_carry_over = ['this', 'it', 'he', 'she', 'his', 'her']
 
     def __init__(self, text):
+        """
+        TODO:
+            * Make it only request NLP one time rather than one time for every sentence.
+        """
         self.subject = None
         client = language.LanguageServiceClient()
 
@@ -96,8 +100,7 @@ class Sentence:
 
     @staticmethod
     def seperate_sentences(text):
-        sentence_list = re.split('\.|\n', text)
-
+        sentence_list = re.split('\.', text)
         return [Sentence(sentence) for sentence in sentence_list]
 
 
