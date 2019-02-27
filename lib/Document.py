@@ -1,10 +1,17 @@
-from anytree import Node, RenderTree
+from anytree import Node, RenderTree, PreOrderIter
 from anytree.exporter import DotExporter
 from lib.Sentence import Sentence
+from lib.Question import Question
+from lib.Quizlet import Quizlet
 
 class Document:
     PIXEL_TOL_RANGE = 30
     def __init__(self, paragraph_list):
+        """
+        Creates a tree structure that outlines the nested structure of the document
+        TODO:
+            * Rotate image so that the text can be aligned before sending it to the vision api
+        """
         self.root_node = Node('root')
         self.annotation_list = []
 
@@ -32,8 +39,10 @@ class Document:
             if parent_nodes != []:
                 new_parent_nodes = []
                 for i, paragraph in enumerate(layer_list):
-
-                    child_node = Node("layer: %s, child_num: %s" % (layer_num, i), parent=parent_nodes[parent_node_idx_list[i]], sentence=Sentence.seperate_sentences(layer_list[i][0]))
+                    sentenceList = Sentence.seperate_sentences(layer_list[i][0])
+                    sentenceList = Sentence.update_subject(sentenceList)
+                    questions = [Question(sentenceList) for sentenceList in sentenceList if Question.is_question(sentenceList)]
+                    child_node = Node("layer: %s, child_num: %s" % (layer_num, i), parent=parent_nodes[parent_node_idx_list[i]], sentences=sentenceList, questions=questions, text=layer_list[i][0])
                     new_parent_nodes.append(child_node)
 
                 # Update parent nodes list:
@@ -62,9 +71,11 @@ class Document:
         """
         top_layer_list = [] 
         remove_idx_list = []
+        avg_x = top_left_x_val
         for idx, paragraph in enumerate(paragraph_list):
             x_val = paragraph[1].vertices[0].x
-            if top_left_x_val - Document.PIXEL_TOL_RANGE <= x_val <= top_left_x_val + Document.PIXEL_TOL_RANGE:
+            if avg_x - Document.PIXEL_TOL_RANGE <= x_val <= avg_x + Document.PIXEL_TOL_RANGE:
+                avg_x = (avg_x + x_val) / 2
                 top_layer_list.append(paragraph_list[idx])
                 remove_idx_list.append(idx)
         # Removing extra indices that are added to layer list
@@ -101,6 +112,49 @@ class Document:
             del layer_list[index]
 
         return parent_node_idx_list
+
+    def create_questions(self):
+        prev_node = self.root_node
+        node_iter = PreOrderIter(prev_node)
+        question_list = []
+
+        terms = []
+        definitions = []
+
+        for node in node_iter:
+            # check if question is empty in node
+
+            if node == self.root_node:
+                continue
+
+            question_starter = ''
+            if len(node.ancestors) > 1:
+                question_starter = 'For %s;\n\n' % ';'.join([ parent.text for parent in node.ancestors if parent != self.root_node])
+                # checks if prev node is not a sibling 
+                # creates a property question
+                if prev_node is node.parent:
+                    node_layer = [sibling for sibling in node.siblings]
+                    node_layer.append(node)
+
+                    temp_term = "%sWhat are the %s properties?" % (question_starter, len(node_layer))
+                    temp_definition = '\n'.join([ "%s. " % (i+1) + sibling.text for i, sibling in enumerate(node_layer) ])
+                    terms.append(temp_term)
+                    definitions.append(temp_definition)
+
+            prev_node = node
+            if node.questions == []:
+                continue
+            
+            temp_terms = [ question_starter + question.sentence.return_string() for question in node.questions]
+            temp_definitions = [str(question.answer.content) for question in node.questions]
+
+            # extend the question list
+            terms.extend(temp_terms)
+            definitions.extend(temp_definitions)
+
+
+        quizlet_client = Quizlet(terms, definitions)
+        return quizlet_client.create_set("My Set Title")
 
     def print(self):
         DotExporter(self.root_node).to_picture("test.png")

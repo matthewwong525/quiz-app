@@ -1,6 +1,6 @@
 from google.cloud import vision
 from google.cloud.vision import types
-from Document import Document
+from lib.Document import Document
 import io
 
 
@@ -18,7 +18,7 @@ def load_document(content):
     document = response.full_text_annotation
     return document
 
-def seperate_to_paragrpahs(doc):
+def seperate_to_paragraphs(doc):
     breaks = vision.enums.TextAnnotation.DetectedBreak.BreakType
     paragraph_list = []
 
@@ -36,7 +36,8 @@ def seperate_to_paragrpahs(doc):
 
 
 if __name__ == "__main__":
-    doc = detect_document("/Users/matt/Documents/y-hack-2017/photos of text/pic1.jpg")
-    paragraph_list = seperate_to_paragrpahs(doc)
+    doc = detect_document("/Users/matt/Documents/y-hack-2017/photos of text/pic2.jpg")
+    paragraph_list = seperate_to_paragraphs(doc)
+    print(paragraph_list)
     #print(paragraph_list)
-    Document(paragraph_list).print()
+    #Document(paragraph_list).print()

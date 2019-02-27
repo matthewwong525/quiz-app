@@ -16,10 +16,7 @@
 import logging
 import os
 from lib import vision
-from lib.Sentence import Sentence
-from lib.Word import Word
-from lib.Quizlet import Quizlet
-from lib.Question import Question
+from lib.Document import Document
 
 from flask import Flask, render_template, request, flash, redirect
 
@@ -59,14 +56,10 @@ def upload_file():
         return "File extension not allowed"
 
     content = file.read()
-    text = vision.load_document(content).text
+    doc = vision.load_document(content)
+    paragraph_list = vision.seperate_to_paragraphs(doc)
 
-    sentenceList = Sentence.seperate_sentences(text)
-    sentenceList = Sentence.update_subject(sentenceList)
-
-    questions = [Question(sentenceList) for sentenceList in sentenceList if Question.is_question(sentenceList)]
-
-    return Quizlet().create_set(file.filename, questions)
+    return Document(paragraph_list).create_questions().text
 
 
 @app.errorhandler(500)
