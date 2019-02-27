@@ -71,11 +71,11 @@ class Document:
         """
         top_layer_list = [] 
         remove_idx_list = []
-        avg_x = top_left_x_val
+        prev_x = top_left_x_val
         for idx, paragraph in enumerate(paragraph_list):
             x_val = paragraph[1].vertices[0].x
-            if avg_x - Document.PIXEL_TOL_RANGE <= x_val <= avg_x + Document.PIXEL_TOL_RANGE:
-                avg_x = (avg_x + x_val) / 2
+            if prev_x - Document.PIXEL_TOL_RANGE <= x_val <= prev_x + Document.PIXEL_TOL_RANGE:
+                prev_x = x_val
                 top_layer_list.append(paragraph_list[idx])
                 remove_idx_list.append(idx)
         # Removing extra indices that are added to layer list
