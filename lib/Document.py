@@ -39,7 +39,6 @@ class Document:
                 break
 
             layer_list = self.find_nodes_in_same_layer(paragraph_list, top_left_x_val)
-            print([ (layer[0], layer[1].vertices[0]) for layer in layer_list])
             parent_node_idx_list = self.determine_parent_node(layer_list, prev_layer_list)
 
             # Add child nodes to the previous layer
