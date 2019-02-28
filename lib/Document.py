@@ -5,7 +5,7 @@ from lib.Question import Question
 from lib.Quizlet import Quizlet
 
 class Document:
-    WITHIN_NEXT_LAYER_TOL_PERC = 0.01
+    WITHIN_NEXT_LAYER_TOL_PERC = 0.03
     NEXT_LAYER_TOL_PERC = 0.2
     def __init__(self, paragraph_list, page_width, page_height):
         """
@@ -39,6 +39,7 @@ class Document:
                 break
 
             layer_list = self.find_nodes_in_same_layer(paragraph_list, top_left_x_val)
+            #print([ (layer[0], layer[1].vertices[0].x) for layer in layer_list])
             parent_node_idx_list = self.determine_parent_node(layer_list, prev_layer_list)
 
             # Add child nodes to the previous layer
@@ -81,12 +82,12 @@ class Document:
         """
         top_layer_list = [] 
         remove_idx_list = []
-        prev_x = top_left_x_val
+        avg_x = top_left_x_val
         for idx, paragraph in enumerate(paragraph_list):
             x_val = paragraph[1].vertices[0].x
             next_layer_tol = Document.WITHIN_NEXT_LAYER_TOL_PERC * self.page_width
-            if prev_x - next_layer_tol <= x_val <= prev_x + next_layer_tol:
-                prev_x = x_val
+            if avg_x - next_layer_tol <= x_val <= avg_x + next_layer_tol:
+                avg_x = (x_val + avg_x) / 2
                 top_layer_list.append(paragraph_list[idx])
                 remove_idx_list.append(idx)
         # Removing extra indices that are added to layer list
