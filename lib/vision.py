@@ -14,6 +14,11 @@ import numpy as np
 from PIL import Image
 
 
+def get_page_size(doc):
+    # gets the size of the first page in document
+    return doc.pages[0].width, doc.pages[0].height
+
+
 def detect_document(path):
     with io.open(path, 'rb') as image_file:
         content = image_file.read()
@@ -88,7 +93,7 @@ def deskew(content):
     original_image = Image.open(io.BytesIO(content))
     rotated_image = original_image.rotate(rotation_number, expand=True)
 
-    # Save Image as bytes
+    # Conver PIL obj to bytes
     with io.BytesIO() as output:
         rotated_image.save(output, format="JPEG")
         contents = output.getvalue()
@@ -96,8 +101,8 @@ def deskew(content):
 
 
 if __name__ == "__main__":
-    doc = detect_document("/Users/matt/Documents/y-hack-2017/photos of text/pic2.jpg")
-    #paragraph_list = seperate_to_paragraphs(doc)
+    doc = detect_document("/Users/matt/Desktop/asdf.jpg")
+    paragraph_list = seperate_to_paragraphs(doc)
+    width, height = get_page_size(doc)
     #print(paragraph_list)
-    #print(paragraph_list)
-    #Document(paragraph_list).print()
+    Document(paragraph_list, width, height).print()

@@ -58,8 +58,10 @@ def upload_file():
     content = file.read()
     doc = vision.load_document(content)
     paragraph_list = vision.seperate_to_paragraphs(doc)
+    width, height = vision.get_page_size(doc)
+    doc_obj = Document(paragraph_list, width, height)
 
-    return Document(paragraph_list).create_questions().text
+    return doc_obj.create_questions().text
 
 
 @app.errorhandler(500)
