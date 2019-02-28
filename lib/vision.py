@@ -2,7 +2,7 @@ from google.cloud import vision
 from google.cloud.vision import types
 from lib.Document import Document
 import io
-
+import os
 #image processing resources
 from skimage import img_as_float
 from skimage.io import imread, imshow, imsave
@@ -23,7 +23,11 @@ def detect_document(path):
     with io.open(path, 'rb') as image_file:
         content = image_file.read()
 
-    rotated_content = deskew(content)
+    filename, file_extension = os.path.splitext(path)
+    file_extension = file_extension.replace('.', '')
+    if file_extension.lower() == 'jpg':
+        file_extension = 'jpeg'
+    rotated_content = deskew(content, file_extension)
     return load_document(rotated_content)
 
 def load_document(content):
@@ -50,9 +54,8 @@ def seperate_to_paragraphs(doc):
                 paragraph_list.append((paragraph_text, paragraph.bounding_box))
     return paragraph_list
 
-def deskew(content):
-
-    image = imread(content, plugin='imageio', as_gray=True)
+def deskew(content, ext):
+    image = imread(content, plugin="imageio", as_gray=True)
     #threshold to get rid of extraneous noise
     thresh = threshold_otsu(image)
     normalize = image > thresh
@@ -95,14 +98,14 @@ def deskew(content):
 
     # Conver PIL obj to bytes
     with io.BytesIO() as output:
-        rotated_image.save(output, format="JPEG")
+        rotated_image.save(output, format=ext)
         contents = output.getvalue()
     return contents
 
 
 if __name__ == "__main__":
-    doc = detect_document("/Users/matt/Desktop/asdf.jpg")
+    doc = detect_document("/Users/matt/Desktop/pic1.jpg")
     paragraph_list = seperate_to_paragraphs(doc)
     width, height = get_page_size(doc)
-    #print(paragraph_list)
-    Document(paragraph_list, width, height).print()
+    print(doc)
+    #Document(paragraph_list, width, height).print()
