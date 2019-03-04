@@ -50,7 +50,8 @@ def seperate_to_paragraphs(doc):
                     word_text = ''.join([
                         symbol.text + ' ' if symbol.property.detected_break.type in [breaks.SPACE, breaks.EOL_SURE_SPACE] else symbol.text for symbol in word.symbols
                     ])
-                    paragraph_text += word_text
+                    if word.property.detected_languages and word.property.detected_languages[0].language_code == 'en':
+                        paragraph_text += word_text
                 paragraph_list.append((paragraph_text, paragraph.bounding_box))
     return paragraph_list
 
@@ -105,7 +106,8 @@ def deskew(content, ext):
 
 if __name__ == "__main__":
     doc = detect_document("/Users/matt/Desktop/pic1.jpg")
-    paragraph_list = seperate_to_paragraphs(doc)
+    word_list = seperate_to_paragraphs(doc)
+    print([word.text for word in word_list])
     width, height = get_page_size(doc)
-    print(doc)
+    #print(paragraph_list)
     #Document(paragraph_list, width, height).print()
