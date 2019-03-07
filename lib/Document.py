@@ -21,7 +21,7 @@ class Document:
         self.page_height = page_height
 
         # Removes paragraphs that only contain 1 character
-        paragraph_list = [paragraph for paragraph in paragraph_list if len(paragraph[0]) > 1]
+        paragraph_list = [paragraph for paragraph in paragraph_list if len(paragraph['text']) > 1]
         layer_num = 1
         parent_nodes = [self.root_node]
         prev_layer_list = []
@@ -30,7 +30,7 @@ class Document:
         # loops through layers until there are no more 
         while paragraph_list:
             top_left_idx = Document.find_top_left(paragraph_list)
-            top_left_x_val = paragraph_list[top_left_idx][1].vertices[0].x 
+            top_left_x_val = paragraph_list[top_left_idx]['bounding_box']['top_left']['x']
 
             # If next top left value is extremely far away from the previous top left value, 
             # break loop and set remaining values as annotations
@@ -46,10 +46,10 @@ class Document:
             if parent_nodes != []:
                 new_parent_nodes = []
                 for i, paragraph in enumerate(layer_list):
-                    sentenceList = Sentence.seperate_sentences(layer_list[i][0])
+                    sentenceList = Sentence.seperate_sentences(paragraph['text'])
                     sentenceList = Sentence.update_subject(sentenceList)
                     questions = [Question(sentenceList) for sentenceList in sentenceList if Question.is_question(sentenceList)]
-                    child_node = Node("layer: %s, child_num: %s" % (layer_num, i), parent=parent_nodes[parent_node_idx_list[i]], sentences=sentenceList, questions=questions, text=layer_list[i][0])
+                    child_node = Node("layer: %s, child_num: %s" % (layer_num, i), parent=parent_nodes[parent_node_idx_list[i]], sentences=sentenceList, questions=questions, text=paragraph['text'])
                     new_parent_nodes.append(child_node)
 
                 # Update parent nodes list:
@@ -71,7 +71,7 @@ class Document:
             * Think of a way to make this better because might have to distinguish
               between a diagram and text files.
         """
-        x_val_list = [paragraph[1].vertices[0].x for paragraph in paragraph_list[:5]]
+        x_val_list = [paragraph['bounding_box']['top_left']['x'] for paragraph in paragraph_list[:5]]
         min_x = min(x_val_list)
         return x_val_list.index(min_x)
 
@@ -84,7 +84,7 @@ class Document:
         remove_idx_list = []
         avg_x = top_left_x_val
         for idx, paragraph in enumerate(paragraph_list):
-            x_val = paragraph[1].vertices[0].x
+            x_val = paragraph['bounding_box']['top_left']['x']
             next_layer_tol = Document.WITHIN_NEXT_LAYER_TOL_PERC * self.page_width
             if avg_x - next_layer_tol <= x_val <= avg_x + next_layer_tol:
                 avg_x = (x_val + avg_x) / 2
@@ -105,8 +105,8 @@ class Document:
         if prev_layer_list == []:
             return [0 for i in layer_list]
 
-        prev_layer_y_list = [ paragraph[1].vertices[0].y for paragraph in prev_layer_list ]
-        layer_y_list = [ paragraph[1].vertices[0].y for paragraph in layer_list ]
+        prev_layer_y_list = [ paragraph['bounding_box']['top_left']['y'] for paragraph in prev_layer_list ]
+        layer_y_list = [ paragraph['bounding_box']['top_left']['y'] for paragraph in layer_list ]
 
         remove_idx_list = []
         for idx, y in enumerate(layer_y_list):

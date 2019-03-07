@@ -17,6 +17,7 @@ import logging
 import os
 from lib import vision
 from lib.Document import Document
+from lib.Paragraph import ParagraphHelper
 
 from flask import Flask, render_template, request, flash, redirect
 
@@ -57,7 +58,8 @@ def upload_file():
 
     content = file.read()
     doc = vision.load_document(content)
-    paragraph_list = vision.seperate_to_paragraphs(doc)
+    p = ParagraphHelper(doc=doc)
+    paragraph_list = p.get_paragraph_list()
     width, height = vision.get_page_size(doc)
     questions = Document(paragraph_list, width, height).create_questions()
 
