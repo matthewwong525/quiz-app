@@ -1,4 +1,5 @@
 from google.cloud import vision
+import re
 
 class ParagraphHelper:
     def __init__(self, word_list=[], avg_symbol_width=0, avg_symbol_height=0, doc=None):
@@ -46,10 +47,42 @@ class ParagraphHelper:
 
         return paragraph
 
+    @staticmethod
+    def check_paragraph_split(paragraph):
+        """
+        Checks if the paragraph should be split and returns a list of 
+        paragraphs.
+
+        """
+        split_idxs = []
+        for idx, line in enumerate(paragraph):
+            first_word = line[0]['text']
+            if idx is 0 or not re.match('(^((\w{1,2}(\.|\)))+?)|^-|^•|^→|^o|^·)(\s|)+$', first_word):
+                continue
+            split_idxs.append(idx)
+
+        prev_idx = 0
+        paragraphs = []
+        # appends sections of the paragraph to paragraphs list
+        for idx in split_idxs:
+            paragraphs.append(paragraph[prev_idx:idx])
+            prev_idx = idx
+
+        if split_idxs == []:
+            return [ paragraph ]
+
+        # appends rest of list to paragraphs
+        if paragraph[split_idxs[-1]:] != []:
+            paragraphs.append(paragraph[split_idxs[-1]:])
+
+        return paragraphs
+
+
+
     def is_adjacent_word(self, prev_word, curr_word):
         lower_x_lim = (prev_word['bounding_box']).vertices[2].x - self.avg_symbol_height * 0.25
-        upper_x_lim = (prev_word['bounding_box'].vertices[2].x + self.avg_symbol_width * 4)
-        upper_y_lim = (prev_word['bounding_box'].vertices[2].y - self.avg_symbol_height * 1.25)
+        upper_x_lim = (prev_word['bounding_box'].vertices[2].x + self.avg_symbol_width * 6)
+        upper_y_lim = (prev_word['bounding_box'].vertices[2].y - self.avg_symbol_height * 1.5)
         lower_y_lim = (prev_word['bounding_box'].vertices[2].y - self.avg_symbol_height * 0.25)
 
         #print("%s %s %s %s" % (lower_x_lim, upper_x_lim, lower_y_lim, upper_y_lim) )
@@ -66,15 +99,15 @@ class ParagraphHelper:
         lower_x_lim = first_word['bounding_box'].vertices[3].x - (self.avg_symbol_width * 3 if line_num != 1 else self.avg_symbol_width * 12)
         upper_x_lim = first_word['bounding_box'].vertices[3].x + self.avg_symbol_width * 3
         upper_y_lim = first_word['bounding_box'].vertices[3].y 
-        lower_y_lim = first_word['bounding_box'].vertices[3].y + self.avg_symbol_height * 0.5
+        lower_y_lim = first_word['bounding_box'].vertices[3].y + self.avg_symbol_height * 0.3
 
-        """
+        
         print("%s %s %s %s" % (lower_x_lim, upper_x_lim, lower_y_lim, upper_y_lim) )
         print(curr_word['bounding_box'].vertices[0])
         print(curr_word['text'])
         print((lower_x_lim <= curr_word['bounding_box'].vertices[0].x <= upper_x_lim) and (upper_y_lim <= curr_word['bounding_box'].vertices[0].y <= lower_y_lim))
         print('')
-        """
+        
         
         if (lower_x_lim <= curr_word['bounding_box'].vertices[0].x <= upper_x_lim) and (upper_y_lim <= curr_word['bounding_box'].vertices[0].y <= lower_y_lim):
             return True
@@ -100,7 +133,6 @@ class ParagraphHelper:
                             'bounding_box': word.bounding_box
                         }
                         if word.property.detected_languages and word.property.detected_languages[0].language_code == 'en':
-                            print("%s %s" % (word_text, word.property.detected_languages[0].language_code) )
                             word_list.append(temp_dict)
 
                         for symbol in word.symbols:
@@ -123,6 +155,7 @@ class ParagraphHelper:
               I am assuming the order of the words in the document work in a particular way
             * Split lines to paragraphs if it is not the first line and there is a point form 
               character eg. [ '•', '→', 'o', '-', '·' etc.] do regex matching maybe [1., ..., 1), ..., a., ..., a), ...] at beginning of line
+              re.match('(^((\w{1,2}(\.|\)))+?)|^-|^•|^→|^o|^·)(\s|)+$')
         """
         temp_word_list = list(self.word_list)
         paragraph_list = []
@@ -146,11 +179,13 @@ class ParagraphHelper:
                 line_list = [word]
             else:
                 temp_paragraph.append(line_list)
-
-                paragraph = ParagraphHelper.get_paragraph_obj(temp_paragraph)
+                # check if temp_paragraph should be split due to point forms
+                temp_paragraphs = ParagraphHelper.check_paragraph_split(temp_paragraph)
+                # creates a paragraph object from paragraph
+                paragraphs = [ ParagraphHelper.get_paragraph_obj(paragraph) for paragraph in temp_paragraphs ]
 
                 # converts paragraph into proper paragraph list format ('text', 'bounded_box')
-                paragraph_list.append(paragraph)
+                paragraph_list.extend(paragraphs)
                 line_list = [word]
                 temp_paragraph = []
 
@@ -165,6 +200,6 @@ class ParagraphHelper:
              
 
     def print(self):
-        print([word['text'] for word in self.word_list])
+        #print([word['text'] for word in self.word_list])
         print(self.avg_symbol_width)
         print(self.avg_symbol_height)
