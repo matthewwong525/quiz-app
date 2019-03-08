@@ -1,6 +1,7 @@
 from google.cloud import vision
 from google.cloud.vision import types
 from lib.Document import Document
+from lib.Paragraph import ParagraphHelper
 import io
 import os
 #image processing resources
@@ -19,18 +20,34 @@ def get_page_size(doc):
     return doc.pages[0].width, doc.pages[0].height
 
 
-def detect_document(path):
-    with io.open(path, 'rb') as image_file:
-        content = image_file.read()
+def load_doc_local(path):
+    with io.open(path, 'rb') as image_file:  
+        filename, file_extension = os.path.splitext(image_file.name)
+        file_extension = file_extension.replace('.', '')
+        if file_extension.lower() == 'jpg':
+            file_extension = 'jpeg'
 
-    filename, file_extension = os.path.splitext(path)
+        content = image.read()
+
+        rotated_content = deskew(content, file_extension)
+
+        client = vision.ImageAnnotatorClient()
+        image = types.Image(content=content)
+
+        response = client.document_text_detection(image=image)
+        document = response.full_text_annotation
+        return document
+
+def load_document(image):
+    filename, file_extension = os.path.splitext(image.filename)
     file_extension = file_extension.replace('.', '')
     if file_extension.lower() == 'jpg':
         file_extension = 'jpeg'
-    rotated_content = deskew(content, file_extension)
-    return load_document(rotated_content)
 
-def load_document(content):
+    content = image.read()
+
+    rotated_content = deskew(content, file_extension)
+
     client = vision.ImageAnnotatorClient()
     image = types.Image(content=content)
 
@@ -38,22 +55,11 @@ def load_document(content):
     document = response.full_text_annotation
     return document
 
-def seperate_to_paragraphs(doc):
-    breaks = vision.enums.TextAnnotation.DetectedBreak.BreakType
-    paragraph_list = []
+def get_width_height(bounding_box):
+    width = abs(bounding_box.vertices[1].x - bounding_box.vertices[0].x)
+    height = abs(bounding_box.vertices[2].y - bounding_box.vertices[1].y)
 
-    for page in doc.pages:
-        for block in page.blocks:
-            for paragraph in block.paragraphs:
-                paragraph_text = ''
-                for word in paragraph.words:
-                    word_text = ''.join([
-                        symbol.text + ' ' if symbol.property.detected_break.type in [breaks.SPACE, breaks.EOL_SURE_SPACE] else symbol.text for symbol in word.symbols
-                    ])
-                    if word.property.detected_languages and word.property.detected_languages[0].language_code == 'en':
-                        paragraph_text += word_text
-                paragraph_list.append((paragraph_text, paragraph.bounding_box))
-    return paragraph_list
+    return width, height
 
 def deskew(content, ext):
     image = imread(content, plugin="imageio", as_gray=True)
@@ -105,9 +111,17 @@ def deskew(content, ext):
 
 
 if __name__ == "__main__":
-    doc = detect_document("/Users/matt/Desktop/pic1.jpg")
-    word_list = seperate_to_paragraphs(doc)
-    print([word.text for word in word_list])
+    path = "/Users/matt/Documents/quiz-app/photos of text/test3.png"
+    with io.open(path, 'rb') as image_file:
+        doc = load_document(image_file)
+
+    p = ParagraphHelper(doc=doc)
+    paragraph_list = p.get_paragraph_list()
+    #for paragraph in paragraph_list:
+        #print(paragraph)
     width, height = get_page_size(doc)
-    #print(paragraph_list)
+    questions = Document(paragraph_list, width, height).create_questions()
+    print(questions.text)
+
+    #width, height = get_page_size(doc)
     #Document(paragraph_list, width, height).print()

@@ -1,5 +1,8 @@
 class Word:
-    def __init__(self, token=None):
+    def __init__(self, token=None, text=None):
+        if text:
+            self.content = text
+            self.part_of_speech = 'UNKNOWN'
         if token:
             pos_tag = (
             'UNKNOWN', 'ADJ', 'ADP', 'ADV', 'CONJ', 'DET', 'NOUN', 'NUM', 'PRON', 'PRT', 'PUNCT', 'VERB', 'X', 'AFFIX')

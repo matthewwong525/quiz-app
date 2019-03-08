@@ -3,6 +3,7 @@ from lib.Word import Word
 from google.cloud import language
 from google.cloud.language import enums
 from google.cloud.language import types
+from google.api_core import exceptions
 
 from copy import deepcopy
 import re
@@ -23,8 +24,16 @@ class Sentence:
             content=text,
             type=enums.Document.Type.PLAIN_TEXT)
 
-        entities = client.analyze_entities(document).entities
-        tokens = client.analyze_syntax(document).tokens
+        # deals with improper language
+        try:
+            entity_obj = client.analyze_entities(document)
+            entities = entity_obj.entities
+            tokens = client.analyze_syntax(document).tokens
+        except exceptions.InvalidArgument as e:
+            print(e)
+            print("Invalid Argument Sentence Ignored")
+            self.words = [ Word(text=text) ]
+            return None
  
         self.words = []
         entity_list = []
@@ -101,7 +110,9 @@ class Sentence:
     @staticmethod
     def seperate_sentences(text):
         sentence_list = re.split('\.', text)
-        return [Sentence(sentence) for sentence in sentence_list]
+        sentence_obj_list = [Sentence(sentence) for sentence in sentence_list]
+        return sentence_obj_list
+
 
 
 if __name__ == "__main__":

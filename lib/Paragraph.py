@@ -68,11 +68,13 @@ class ParagraphHelper:
         upper_y_lim = first_word['bounding_box'].vertices[3].y 
         lower_y_lim = first_word['bounding_box'].vertices[3].y + self.avg_symbol_height * 0.5
 
+        """
         print("%s %s %s %s" % (lower_x_lim, upper_x_lim, lower_y_lim, upper_y_lim) )
         print(curr_word['bounding_box'].vertices[0])
         print(curr_word['text'])
         print((lower_x_lim <= curr_word['bounding_box'].vertices[0].x <= upper_x_lim) and (upper_y_lim <= curr_word['bounding_box'].vertices[0].y <= lower_y_lim))
         print('')
+        """
         
         if (lower_x_lim <= curr_word['bounding_box'].vertices[0].x <= upper_x_lim) and (upper_y_lim <= curr_word['bounding_box'].vertices[0].y <= lower_y_lim):
             return True
@@ -97,7 +99,9 @@ class ParagraphHelper:
                             'text': word_text,
                             'bounding_box': word.bounding_box
                         }
-                        word_list.append(temp_dict)
+                        if word.property.detected_languages and word.property.detected_languages[0].language_code == 'en':
+                            print("%s %s" % (word_text, word.property.detected_languages[0].language_code) )
+                            word_list.append(temp_dict)
 
                         for symbol in word.symbols:
                             width, height = ParagraphHelper.get_width_height(symbol.bounding_box)
@@ -118,7 +122,7 @@ class ParagraphHelper:
             * add a component that queries to find the next word if it is not an adjacent word because
               I am assuming the order of the words in the document work in a particular way
             * Split lines to paragraphs if it is not the first line and there is a point form 
-              character eg. [ '•', '→', 'o' etc.] maybe [1., ..., 1), ..., a., ..., a), ...] at beginning of line
+              character eg. [ '•', '→', 'o', '-', '·' etc.] do regex matching maybe [1., ..., 1), ..., a., ..., a), ...] at beginning of line
         """
         temp_word_list = list(self.word_list)
         paragraph_list = []
@@ -164,4 +168,3 @@ class ParagraphHelper:
         print([word['text'] for word in self.word_list])
         print(self.avg_symbol_width)
         print(self.avg_symbol_height)
-        

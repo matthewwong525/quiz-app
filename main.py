@@ -56,8 +56,7 @@ def upload_file():
     if not file or not allowed_file(file.filename):
         return "File extension not allowed"
 
-    content = file.read()
-    doc = vision.load_document(content)
+    doc = vision.load_document(file)
     p = ParagraphHelper(doc=doc)
     paragraph_list = p.get_paragraph_list()
     width, height = vision.get_page_size(doc)
