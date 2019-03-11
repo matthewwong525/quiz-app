@@ -37,13 +37,17 @@ class Document:
             if prev_top_left_x_val != 0 and top_left_x_val > prev_top_left_x_val + (Document.NEXT_LAYER_TOL_PERC*self.page_width):
                 self.annotation_list.extend(paragraph_list)
                 break
-
-            layer_list = self.find_nodes_in_same_layer(paragraph_list, top_left_x_val)
-            #print([ (layer[0], layer[1].vertices[0].x) for layer in layer_list])
-            parent_node_idx_list = self.determine_parent_node(layer_list, prev_layer_list)
+            """
+            print(layer_num)
+            print([paragraph['text'] for paragraph in paragraph_list])
+            print(parent_nodes)
+            print('')
+            """
 
             # Add child nodes to the previous layer
             if parent_nodes != []:
+                layer_list = self.find_nodes_in_same_layer(paragraph_list, top_left_x_val)
+                parent_node_idx_list = self.determine_parent_node(layer_list, prev_layer_list)
                 new_parent_nodes = []
                 for i, paragraph in enumerate(layer_list):
                     # TODO: seperate this section to init questions section
@@ -61,6 +65,7 @@ class Document:
             else:
                 self.annotation_list.extend(paragraph_list)
                 break
+
 
     @staticmethod
     def find_top_left(paragraph_list):
@@ -120,6 +125,7 @@ class Document:
             if parent_idx != []:
                 parent_node_idx_list.append(parent_idx[-1])
             else:
+                self.annotation_list.append(layer_list[idx])
                 remove_idx_list.append(idx)
         
         # Removing extra indices that can't be matched with a parent node
