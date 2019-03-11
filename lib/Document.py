@@ -46,6 +46,7 @@ class Document:
             if parent_nodes != []:
                 new_parent_nodes = []
                 for i, paragraph in enumerate(layer_list):
+                    # TODO: seperate this section to init questions section
                     sentenceList = Sentence.seperate_sentences(paragraph['text'])
                     sentenceList = Sentence.update_subject(sentenceList)
                     questions = [Question(sentenceList) for sentenceList in sentenceList if Question.is_question(sentenceList)]
@@ -90,7 +91,7 @@ class Document:
                 avg_x = (x_val + avg_x) / 2
                 top_layer_list.append(paragraph_list[idx])
                 remove_idx_list.append(idx)
-        # Removing extra indices that are added to layer list
+        # Removing indices that are added to layer list
         for index in sorted(remove_idx_list, reverse=True):
             del paragraph_list[index]
         return top_layer_list
@@ -173,7 +174,8 @@ class Document:
 
     def print(self):
         DotExporter(self.root_node).to_picture("test.png")
-        print(RenderTree(self.root_node))
+        print(RenderTree(self.root_node).by_attr("text"))
+        print([paragraph['text'] for paragraph in self.annotation_list])
 
 
 

@@ -61,14 +61,19 @@ class Sentence:
         # group together words appearing in the same entity
         for entityContent in entity_list:
             entity_content_arr = entityContent.name.split(' ')
+            # loops through all the words within the sentence
             for i in range(len(words_content_list)):
+                # prevents array out of bounds
                 if i >= len(self.words):
                     break
+                # checks if word is equal to the first word of the entity and if words after the first word are the same
                 if words_content_list[i] == entity_content_arr[0] \
                         and words_content_list[i:i + len(entity_content_arr)] == entity_content_arr:
+                    # deletes subsequent word object and replaces it with an entity
                     del self.words[i + 1:i + len(entity_content_arr)]
                     self.words[i].add_entity(entityContent)
                     words_content_list[i] = entityContent.name
+                    # sets the word_content_list to 0 so it doesn't match with anothe entity
                     for j in range(i + 1, i + len(entity_content_arr)):
                         words_content_list[j] = 0
                         # words.insert(i, entityContent)
