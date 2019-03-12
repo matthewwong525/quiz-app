@@ -72,7 +72,7 @@ class ParagraphHelper:
         for idx, line in enumerate(paragraph):
             first_word = line[0]['text']
             # check if lines after first line have a point form character at the front
-            if idx is 0 or not re.match('(^((\w{1,2}(\.|\)))+?)|^-|^•|^→|^o|^·|^.|^O|^o)(\s|)+$', first_word):
+            if idx is 0 or not re.match('(^((\w{1,2}(\.|\)))+?)|^-|^•|^→|^o|^·|^.|^O|^o|^0)(\s|)+$', first_word):
                 continue
             split_idxs.append(idx)
 
@@ -95,7 +95,7 @@ class ParagraphHelper:
 
     def is_adjacent_word(self, prev_word, curr_word):
         lower_x_lim = (prev_word['bounding_box']).vertices[2].x - self.avg_symbol_height * 0.25
-        upper_x_lim = (prev_word['bounding_box'].vertices[2].x + self.avg_symbol_width * 6)
+        upper_x_lim = (prev_word['bounding_box'].vertices[2].x + self.avg_symbol_width * 10)
         upper_y_lim = (prev_word['bounding_box'].vertices[2].y - self.avg_symbol_height * 1.5)
         lower_y_lim = (prev_word['bounding_box'].vertices[2].y - self.avg_symbol_height * 0.25)
 
@@ -116,13 +116,14 @@ class ParagraphHelper:
             return False    
         first_word = temp_paragraph[0][0] if len(temp_paragraph) > 1 and len(temp_paragraph[0]) > 1  else line[0]
         second_word = temp_paragraph[0][1] if len(temp_paragraph) > 1 and len(temp_paragraph[0]) > 1 else line[1]
-        is_first_word_indent = re.match('(^((\w{1,2}(\.|\)))+?)|^-|^•|^→|^o|^·|^.|^O|^o)(\s|)+$', first_word['text'])
+        is_first_word_indent = re.match('(^((\w{1,2}(\.|\)))+?)|^-|^•|^→|^o|^·|^.|^O|^o|^0)(\s|)+$', first_word['text'])
 
         next_word_x = second_word if is_first_word_indent else first_word
         next_word_y = line[1] if is_first_word_indent else line[0]
 
-        # extra if statement here deals with indents
-        lower_x_lim = next_word_x['bounding_box'].vertices[3].x - (self.avg_symbol_width * 3 if len(temp_paragraph) != 1 or is_first_word_indent else self.avg_symbol_width * 12)
+        # previously handled indents not anymore. ON TODO list.
+        # Not handled because if it falsely detects an indented point, it can ruin the paragraph formations
+        lower_x_lim = next_word_x['bounding_box'].vertices[3].x - (self.avg_symbol_width *0.5 if len(temp_paragraph) != 1 or is_first_word_indent else self.avg_symbol_width*0.5)
         upper_x_lim = next_word_x['bounding_box'].vertices[3].x + self.avg_symbol_width * 3
         upper_y_lim = next_word_y['bounding_box'].vertices[3].y 
         lower_y_lim = next_word_y['bounding_box'].vertices[3].y + self.avg_symbol_height * 0.6
