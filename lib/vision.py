@@ -27,12 +27,12 @@ def load_doc_local(path):
         if file_extension.lower() == 'jpg':
             file_extension = 'jpeg'
 
-        content = image.read()
+        content = image_file.read()
 
         rotated_content = deskew(content, file_extension)
 
         client = vision.ImageAnnotatorClient()
-        image = types.Image(content=content)
+        image = types.Image(content=rotated_content)
 
         response = client.document_text_detection(image=image)
         document = response.full_text_annotation
@@ -49,7 +49,7 @@ def load_document(image):
     rotated_content = deskew(content, file_extension)
 
     client = vision.ImageAnnotatorClient()
-    image = types.Image(content=content)
+    image = types.Image(content=rotated_content)
 
     response = client.document_text_detection(image=image)
     document = response.full_text_annotation
@@ -99,9 +99,14 @@ def deskew(content, ext):
     elif rotation_number < -45:
         rotation_number = 90 - abs(rotation_number)
 
+    if abs(rotation_number) < 0.3:
+        return content
+
     # Convert image to PIL image to be rotated
     original_image = Image.open(io.BytesIO(content))
-    rotated_image = original_image.rotate(rotation_number, expand=True)
+    rotated_image = original_image.rotate(rotation_number, resample=Image.BICUBIC, expand=True)
+
+    rotated_image.save('roated_image.png')
 
     # Conver PIL obj to bytes
     with io.BytesIO() as output:
@@ -111,17 +116,17 @@ def deskew(content, ext):
 
 
 if __name__ == "__main__":
-    path = "/Users/matt/Documents/quiz-app/photos of text/test3.png"
-    with io.open(path, 'rb') as image_file:
-        doc = load_document(image_file)
+    path = "/Users/matt/Documents/quiz-app/photos of text/test2.png"
+    doc = load_doc_local(path)
 
     p = ParagraphHelper(doc=doc)
     paragraph_list = p.get_paragraph_list()
-    #for paragraph in paragraph_list:
-        #print(paragraph)
-    width, height = get_page_size(doc)
-    questions = Document(paragraph_list, width, height).create_questions()
-    print(questions.text)
+    for paragraph in paragraph_list:
+        print(paragraph['text'])
+    p.print()
+    document = Document(paragraph_list, p.avg_symbol_width, p.avg_symbol_height)
+    document.print()
+    #print(document.create_questions())
 
     #width, height = get_page_size(doc)
     #Document(paragraph_list, width, height).print()

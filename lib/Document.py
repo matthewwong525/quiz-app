@@ -3,11 +3,10 @@ from anytree.exporter import DotExporter
 from lib.Sentence import Sentence
 from lib.Question import Question
 from lib.Quizlet import Quizlet
+import re
 
 class Document:
-    WITHIN_NEXT_LAYER_TOL_PERC = 0.03
-    NEXT_LAYER_TOL_PERC = 0.2
-    def __init__(self, paragraph_list, page_width, page_height):
+    def __init__(self, paragraph_list, symbol_width, symbol_height):
         """
         Creates a tree structure that outlines the nested structure of the document
         TODO:
@@ -17,11 +16,11 @@ class Document:
         """
         self.root_node = Node('root')
         self.annotation_list = []
-        self.page_width = page_width
-        self.page_height = page_height
+        self.symbol_width = symbol_width
+        self.symbol_height = symbol_height
 
-        # Removes paragraphs that only contain 1 character
-        paragraph_list = [paragraph for paragraph in paragraph_list if len(paragraph['text']) > 1]
+        # Removes paragraphs that does not contain letters or numbers
+        paragraph_list = [paragraph for paragraph in paragraph_list if re.search('\w', paragraph['text'])]
         layer_num = 1
         parent_nodes = [self.root_node]
         prev_layer_list = []
@@ -34,15 +33,9 @@ class Document:
 
             # If next top left value is extremely far away from the previous top left value, 
             # break loop and set remaining values as annotations
-            if prev_top_left_x_val != 0 and top_left_x_val > prev_top_left_x_val + (Document.NEXT_LAYER_TOL_PERC*self.page_width):
+            if prev_top_left_x_val != 0 and top_left_x_val > prev_top_left_x_val + (20*self.symbol_width):
                 self.annotation_list.extend(paragraph_list)
                 break
-            """
-            print(layer_num)
-            print([paragraph['text'] for paragraph in paragraph_list])
-            print(parent_nodes)
-            print('')
-            """
 
             # Add child nodes to the previous layer
             if parent_nodes != []:
@@ -51,10 +44,7 @@ class Document:
                 new_parent_nodes = []
                 for i, paragraph in enumerate(layer_list):
                     # TODO: seperate this section to init questions section
-                    sentenceList = Sentence.seperate_sentences(paragraph['text'])
-                    sentenceList = Sentence.update_subject(sentenceList)
-                    questions = [Question(sentenceList) for sentenceList in sentenceList if Question.is_question(sentenceList)]
-                    child_node = Node("layer: %s, child_num: %s" % (layer_num, i), parent=parent_nodes[parent_node_idx_list[i]], sentences=sentenceList, questions=questions, text=paragraph['text'])
+                    child_node = Node("layer: %s, child_num: %s" % (layer_num, i), parent=parent_nodes[parent_node_idx_list[i]], text=paragraph['text'])
                     new_parent_nodes.append(child_node)
 
                 # Update parent nodes list:
@@ -66,7 +56,6 @@ class Document:
                 self.annotation_list.extend(paragraph_list)
                 break
 
-
     @staticmethod
     def find_top_left(paragraph_list):
         """
@@ -77,7 +66,7 @@ class Document:
             * Think of a way to make this better because might have to distinguish
               between a diagram and text files.
         """
-        x_val_list = [paragraph['bounding_box']['top_left']['x'] for paragraph in paragraph_list[:5]]
+        x_val_list = [ paragraph['bounding_box']['top_left']['x'] for paragraph in paragraph_list[:5]]
         min_x = min(x_val_list)
         return x_val_list.index(min_x)
 
@@ -89,16 +78,20 @@ class Document:
         top_layer_list = [] 
         remove_idx_list = []
         avg_x = top_left_x_val
+        #print(avg_x)
+        #print(4.5 * self.symbol_width)
         for idx, paragraph in enumerate(paragraph_list):
             x_val = paragraph['bounding_box']['top_left']['x']
-            next_layer_tol = Document.WITHIN_NEXT_LAYER_TOL_PERC * self.page_width
+            next_layer_tol = 4.5 * self.symbol_width
             if avg_x - next_layer_tol <= x_val <= avg_x + next_layer_tol:
                 avg_x = (x_val + avg_x) / 2
+                #print(paragraph_list[idx])
                 top_layer_list.append(paragraph_list[idx])
                 remove_idx_list.append(idx)
         # Removing indices that are added to layer list
         for index in sorted(remove_idx_list, reverse=True):
             del paragraph_list[index]
+        #print('')
         return top_layer_list
 
     def determine_parent_node(self, layer_list, prev_layer_list):
@@ -117,8 +110,7 @@ class Document:
         remove_idx_list = []
         for idx, y in enumerate(layer_y_list):
             # Finds first index of parent node
-            # -10 is for tolerance
-            parent_idx = [i for i, val in enumerate(prev_layer_y_list) if y >= val - 10]
+            parent_idx = [i for i, val in enumerate(prev_layer_y_list) if (val - self.symbol_height*0.5) <= y]
 
             # If there exists a node below a parent node, add the index to the list
             # otherwise, pop the index from the layer_list
@@ -163,12 +155,17 @@ class Document:
                     definitions.append(temp_definition)
 
             prev_node = node
-            if node.questions == []:
-                continue
             
             # Creates fill in the blank questions here
-            temp_terms = [ question_starter + question.sentence.return_string() for question in node.questions]
-            temp_definitions = [str(question.answer.content) for question in node.questions]
+            sentenceList = Sentence.seperate_sentences(node.text)
+            sentenceList = Sentence.update_subject(sentenceList)
+            questions = [Question(sentenceList) for sentenceList in sentenceList if Question.is_question(sentenceList)]
+
+            if questions == []:
+                continue
+
+            temp_terms = [ question_starter + question.sentence.return_string() for question in questions]
+            temp_definitions = [str(question.answer.content) for question in questions]
 
             # extend the question list
             terms.extend(temp_terms)
@@ -176,12 +173,13 @@ class Document:
 
 
         quizlet_client = Quizlet(terms, definitions)
-        return quizlet_client.create_set("My Set Title")
+        return quizlet_client.create_set("Test Set")
 
     def print(self):
         DotExporter(self.root_node).to_picture("test.png")
         print(RenderTree(self.root_node).by_attr("text"))
-        print([paragraph['text'] for paragraph in self.annotation_list])
+        for paragraph in self.annotation_list:
+            print(paragraph)
 
 
 

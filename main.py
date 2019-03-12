@@ -59,8 +59,7 @@ def upload_file():
     doc = vision.load_document(file)
     p = ParagraphHelper(doc=doc)
     paragraph_list = p.get_paragraph_list()
-    width, height = vision.get_page_size(doc)
-    questions = Document(paragraph_list, width, height).create_questions()
+    questions = Document(paragraph_list, p.avg_symbol_width, p.avg_symbol_height).create_questions()
 
     return questions.json()['url']
 

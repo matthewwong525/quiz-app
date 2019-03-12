@@ -26,21 +26,35 @@ class ParagraphHelper:
 
         return width, height
 
-    @staticmethod
-    def get_paragraph_obj(paragraph_list):
+    def get_paragraph_obj(self, paragraph_list):
         # flattens all the lines into a list of word
         flattened_paragraph = [ word for line in paragraph_list for word in line ]
 
         # creates paragraph object
-        most_left = min([word['bounding_box'].vertices[0].x for word in flattened_paragraph])
+        width = 0
+
+        if len(flattened_paragraph) == 1:
+            scd_most_left = flattened_paragraph[0]['bounding_box'].vertices[0].x
+        else:
+            # gets second most left word and adds width of first most left word so it can filter out the first bullet point extra spacing
+            most_left_word = min(flattened_paragraph, key=lambda x: x['bounding_box'].vertices[0].x)
+            scd_left_word = min([word for word in flattened_paragraph if most_left_word != word], key=lambda x: x['bounding_box'].vertices[0].x)
+            scd_most_left = scd_left_word['bounding_box'].vertices[0].x
+            # makes sure that the left most word is not under to the second left most word
+            # so it does not unnecessarily add a width
+            if abs(most_left_word['bounding_box'].vertices[0].x - scd_most_left) > self.avg_symbol_width * 2:
+                width, height = ParagraphHelper.get_width_height(most_left_word['bounding_box'])
+
+
         most_right = max([word['bounding_box'].vertices[2].x for word in flattened_paragraph])
         most_bot = max([word['bounding_box'].vertices[2].y for word in flattened_paragraph])
         most_top = min([word['bounding_box'].vertices[0].y for word in flattened_paragraph])
+        
 
         paragraph = {
             'text' : ''.join([word['text'] for word in flattened_paragraph]),
             'bounding_box': {
-                "top_left": {'x': most_left, 'y': most_top},
+                "top_left": {'x': scd_most_left - width, 'y': most_top},
                 "bot_right": {'x': most_right, 'y': most_bot}
             }
         }
@@ -58,7 +72,7 @@ class ParagraphHelper:
         for idx, line in enumerate(paragraph):
             first_word = line[0]['text']
             # check if lines after first line have a point form character at the front
-            if idx is 0 or not re.match('(^((\w{1,2}(\.|\)))+?)|^-|^•|^→|^o|^·)(\s|)+$', first_word):
+            if idx is 0 or not re.match('(^((\w{1,2}(\.|\)))+?)|^-|^•|^→|^o|^·|^.|^O|^o)(\s|)+$', first_word):
                 continue
             split_idxs.append(idx)
 
@@ -102,7 +116,7 @@ class ParagraphHelper:
             return False    
         first_word = temp_paragraph[0][0] if len(temp_paragraph) > 1 and len(temp_paragraph[0]) > 1  else line[0]
         second_word = temp_paragraph[0][1] if len(temp_paragraph) > 1 and len(temp_paragraph[0]) > 1 else line[1]
-        is_first_word_indent = re.match('(^((\w{1,2}(\.|\)))+?)|^-|^•|^→|^o|^·)(\s|)+$', first_word['text'])
+        is_first_word_indent = re.match('(^((\w{1,2}(\.|\)))+?)|^-|^•|^→|^o|^·|^.|^O|^o)(\s|)+$', first_word['text'])
 
         next_word_x = second_word if is_first_word_indent else first_word
         next_word_y = line[1] if is_first_word_indent else line[0]
@@ -111,15 +125,16 @@ class ParagraphHelper:
         lower_x_lim = next_word_x['bounding_box'].vertices[3].x - (self.avg_symbol_width * 3 if len(temp_paragraph) != 1 or is_first_word_indent else self.avg_symbol_width * 12)
         upper_x_lim = next_word_x['bounding_box'].vertices[3].x + self.avg_symbol_width * 3
         upper_y_lim = next_word_y['bounding_box'].vertices[3].y 
-        lower_y_lim = next_word_y['bounding_box'].vertices[3].y + self.avg_symbol_height * 0.5
+        lower_y_lim = next_word_y['bounding_box'].vertices[3].y + self.avg_symbol_height * 0.6
 
-        """
+        """        
         print("%s %s %s %s" % (lower_x_lim, upper_x_lim, lower_y_lim, upper_y_lim) )
         print(curr_word['bounding_box'].vertices[0])
         print(curr_word['text'])
         print((lower_x_lim <= curr_word['bounding_box'].vertices[0].x <= upper_x_lim) and (upper_y_lim <= curr_word['bounding_box'].vertices[0].y <= lower_y_lim))
         print('')
         """
+        
         
         if (lower_x_lim <= curr_word['bounding_box'].vertices[0].x <= upper_x_lim) and (upper_y_lim <= curr_word['bounding_box'].vertices[0].y <= lower_y_lim):
             return True
@@ -193,7 +208,7 @@ class ParagraphHelper:
                 # check if temp_paragraph should be split due to point forms
                 temp_paragraphs = ParagraphHelper.check_paragraph_split(temp_paragraph)
                 # creates a paragraph object from paragraph
-                paragraphs = [ ParagraphHelper.get_paragraph_obj(paragraph) for paragraph in temp_paragraphs ]
+                paragraphs = [ self.get_paragraph_obj(paragraph) for paragraph in temp_paragraphs ]
 
                 # converts paragraph into proper paragraph list format ('text', 'bounded_box')
                 paragraph_list.extend(paragraphs)
@@ -204,7 +219,7 @@ class ParagraphHelper:
             if idx == len(temp_word_list)-1:
                 temp_paragraph.append(line)
 
-                paragraph = ParagraphHelper.get_paragraph_obj(temp_paragraph)
+                paragraph = self.get_paragraph_obj(temp_paragraph)
                 paragraph_list.append(paragraph)
 
         return paragraph_list
