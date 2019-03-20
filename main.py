@@ -57,6 +57,8 @@ def upload_file():
         return "File extension not allowed"
 
     doc = vision.load_document(file)
+    if not doc:
+        return 'Bad Image Data'
     p = ParagraphHelper(doc=doc)
     paragraph_list = p.get_paragraph_list()
     questions = Document(paragraph_list, p.avg_symbol_width, p.avg_symbol_height).create_questions()

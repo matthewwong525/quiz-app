@@ -168,7 +168,7 @@ class ParagraphHelper:
                             avg_symbol_height_list.append(height)
 
         self.avg_symbol_width = sum(avg_symbol_width_list) / len(avg_symbol_width_list)
-        self.avg_symbol_height = sum(avg_symbol_height_list) / len(avg_symbol_width_list)
+        self.avg_symbol_height = sum(avg_symbol_height_list) / len(avg_symbol_height_list)
 
         self.word_list = word_list
 

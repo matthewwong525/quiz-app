@@ -11,6 +11,8 @@ from skimage.filters import gaussian, threshold_otsu
 from skimage.feature import canny
 from skimage.transform import probabilistic_hough_line, rotate
 
+import pdf2image
+
 import numpy as np
 from PIL import Image
 
@@ -19,32 +21,21 @@ def get_page_size(doc):
     # gets the size of the first page in document
     return doc.pages[0].width, doc.pages[0].height
 
-
-def load_doc_local(path):
-    with io.open(path, 'rb') as image_file:  
-        filename, file_extension = os.path.splitext(image_file.name)
-        file_extension = file_extension.replace('.', '')
-        if file_extension.lower() == 'jpg':
-            file_extension = 'jpeg'
-
-        content = image_file.read()
-
-        rotated_content = deskew(content, file_extension)
-
-        client = vision.ImageAnnotatorClient()
-        image = types.Image(content=rotated_content)
-
-        response = client.document_text_detection(image=image)
-        document = response.full_text_annotation
-        return document
-
-def load_document(image):
-    filename, file_extension = os.path.splitext(image.filename)
+def load_document(image, local=False):
+    filename, file_extension = os.path.splitext(image.filename) if not local else os.path.splitext(image.name)
     file_extension = file_extension.replace('.', '')
     if file_extension.lower() == 'jpg':
         file_extension = 'jpeg'
 
     content = image.read()
+
+    # converts pdf to jpg if it detects that the document is a pdf
+    if file_extension.lower() == 'pdf':
+        file_extension = 'jpeg'
+        pdf_images = pdf2image.convert_from_bytes(content, fmt=file_extension)
+        with io.BytesIO() as output:
+            pdf_images[0].save(output, file_extension)
+            content = output.getvalue()
 
     rotated_content = deskew(content, file_extension)
 
@@ -52,8 +43,9 @@ def load_document(image):
     image = types.Image(content=rotated_content)
 
     response = client.document_text_detection(image=image)
-    document = response.full_text_annotation
-    return document
+    if response.error.code != 0:
+        return None
+    return response.full_text_annotation
 
 def get_width_height(bounding_box):
     width = abs(bounding_box.vertices[1].x - bounding_box.vertices[0].x)
@@ -106,19 +98,19 @@ def deskew(content, ext):
     original_image = Image.open(io.BytesIO(content))
     rotated_image = original_image.rotate(rotation_number, resample=Image.BICUBIC, expand=True)
 
-    rotated_image.save('roated_image.png')
-
     # Conver PIL obj to bytes
     with io.BytesIO() as output:
         rotated_image.save(output, format=ext)
         contents = output.getvalue()
     return contents
 
-
 if __name__ == "__main__":
-    path = "/Users/matt/Documents/quiz-app/photos of text/test2.png"
-    doc = load_doc_local(path)
-
+    path = "/Users/matt/Documents/quiz-app/photos of text/test.pdf"
+    with io.open(path, 'rb') as image_file:
+        doc = load_document(image_file)
+    if not doc:
+        print('Bad Image Data')
+    
     p = ParagraphHelper(doc=doc)
     paragraph_list = p.get_paragraph_list()
     for paragraph in paragraph_list:
@@ -126,6 +118,7 @@ if __name__ == "__main__":
     p.print()
     document = Document(paragraph_list, p.avg_symbol_width, p.avg_symbol_height)
     document.print()
+    
     #print(document.create_questions())
 
     #width, height = get_page_size(doc)
