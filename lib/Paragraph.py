@@ -72,7 +72,7 @@ class ParagraphHelper:
         for idx, line in enumerate(paragraph):
             first_word = line[0]['text']
             # check if lines after first line have a point form character at the front
-            if idx is 0 or not re.match('(^((\w{1,2}(\.|\)))+?)|^-|^•|^→|^o|^·|^\.|^O|^o|^0)(\s|)+$', first_word):
+            if idx is 0 or not re.match('(^((\w{1,2}(\.|\)))+?)|^-|^•|^→|^o|^·|^\.|^O|^o|^0|^>)(\s|)+$', first_word):
                 continue
             split_idxs.append(idx)
 
@@ -116,7 +116,7 @@ class ParagraphHelper:
             return False    
         first_word = temp_paragraph[0][0] if len(temp_paragraph) > 1 and len(temp_paragraph[0]) > 1  else line[0]
         second_word = temp_paragraph[0][1] if len(temp_paragraph) > 1 and len(temp_paragraph[0]) > 1 else line[1]
-        is_first_word_indent = re.match('(^((\w{1,2}(\.|\)))+?)|^-|^•|^→|^o|^·|^\.|^O|^o|^0)(\s|)+$', first_word['text'])
+        is_first_word_indent = re.match('(^((\w{1,2}(\.|\)))+?)|^-|^•|^→|^o|^·|^\.|^O|^o|^0|^>)(\s|)+$', first_word['text'])
 
         next_word_x = second_word if is_first_word_indent else first_word
         next_word_y = line[1] if is_first_word_indent else line[0]
@@ -128,11 +128,12 @@ class ParagraphHelper:
         upper_y_lim = next_word_y['bounding_box'].vertices[3].y 
         lower_y_lim = next_word_y['bounding_box'].vertices[3].y + self.avg_symbol_height * 0.6
 
-        """ 
+        """
         print("%s %s %s %s" % (lower_x_lim, upper_x_lim, lower_y_lim, upper_y_lim) )
         print(curr_word['bounding_box'].vertices[0])
         print(curr_word['text'])
         print((lower_x_lim <= curr_word['bounding_box'].vertices[0].x <= upper_x_lim) and (upper_y_lim <= curr_word['bounding_box'].vertices[0].y <= lower_y_lim))
+        print('is first word indented: %s' % is_first_word_indent)
         print('')
         """
         
@@ -205,12 +206,8 @@ class ParagraphHelper:
                 line = [word]
             else:
                 temp_paragraph.append(line)
-                print([[word['text'] for word in line] for line in temp_paragraph])
                 # check if temp_paragraph should be split due to point forms
                 temp_paragraphs = ParagraphHelper.check_paragraph_split(temp_paragraph)
-                for para in temp_paragraphs:
-                    print([[word['text'] for word in line] for line in para])
-                print('')
                 # creates a paragraph object from paragraph
                 paragraphs = [ self.get_paragraph_obj(paragraph) for paragraph in temp_paragraphs ]
 

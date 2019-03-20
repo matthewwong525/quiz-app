@@ -183,5 +183,5 @@ class Document:
         DotExporter(self.root_node).to_picture("test.png")
         print(RenderTree(self.root_node).by_attr("text"))
         for paragraph in self.annotation_list:
-            print(paragraph)
+            print(paragraph['text'])
 
