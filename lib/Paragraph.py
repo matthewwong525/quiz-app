@@ -72,7 +72,7 @@ class ParagraphHelper:
         for idx, line in enumerate(paragraph):
             first_word = line[0]['text']
             # check if lines after first line have a point form character at the front
-            if idx is 0 or not re.match('(^((\w{1,2}(\.|\)))+?)|^-|^•|^→|^o|^·|^\.|^O|^o|^0|^>)(\s|)+$', first_word):
+            if idx is 0 or not re.match('(^((\w{1,2}(\.|\)))+?)|^-|^•|^→|^o|^·|^\.|^O|^o|^0|^>|^✓)(\s|)+$', first_word):
                 continue
             split_idxs.append(idx)
 
@@ -116,7 +116,7 @@ class ParagraphHelper:
             return False    
         first_word = temp_paragraph[0][0] if len(temp_paragraph) > 1 and len(temp_paragraph[0]) > 1  else line[0]
         second_word = temp_paragraph[0][1] if len(temp_paragraph) > 1 and len(temp_paragraph[0]) > 1 else line[1]
-        is_first_word_indent = re.match('(^((\w{1,2}(\.|\)))+?)|^-|^•|^→|^o|^·|^\.|^O|^o|^0|^>)(\s|)+$', first_word['text'])
+        is_first_word_indent = re.match('(^((\w{1,2}(\.|\)))+?)|^-|^•|^→|^o|^·|^\.|^O|^o|^0|^>|^✓)(\s|)+$', first_word['text'])
 
         next_word_x = second_word if is_first_word_indent else first_word
         next_word_y = line[1] if is_first_word_indent else line[0]

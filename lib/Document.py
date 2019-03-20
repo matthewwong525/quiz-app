@@ -161,9 +161,7 @@ class Document:
             prev_node = node
             
             # Creates fill in the blank questions here
-            sentenceList = Sentence.seperate_sentences(node.text)
-            sentenceList = Sentence.update_subject(sentenceList)
-            questions = [Question(sentenceList) for sentenceList in sentenceList if Question.is_question(sentenceList)]
+            questions = Document.question_from_text(node.text)
 
             if questions == []:
                 continue
@@ -175,9 +173,29 @@ class Document:
             terms.extend(temp_terms)
             definitions.extend(temp_definitions)
 
+        for annotation in self.annotation_list:
+            questions = Document.question_from_text(node.text)
+
+            if questions == []:
+                continue
+
+            temp_terms = [ question_starter + question.sentence.return_string() for question in questions]
+            temp_definitions = [str(question.answer.content) for question in questions]
+
+            # extend the question list
+            terms.extend(temp_terms)
+            definitions.extend(temp_definitions)
 
         quizlet_client = Quizlet(terms, definitions)
         return quizlet_client.create_set("Test Set")
+
+    def question_from_text(text):
+        sentenceList = Sentence.seperate_sentences(text)
+        sentenceList = Sentence.update_subject(sentenceList)
+        questions = [Question(sentenceList) for sentenceList in sentenceList if Question.is_question(sentenceList)]
+
+        return questions
+
 
     def print(self):
         DotExporter(self.root_node).to_picture("test.png")
