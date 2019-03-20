@@ -142,12 +142,16 @@ class Document:
 
             question_starter = ''
             if len(node.ancestors) > 1:
-                question_starter = 'For:\n%s ;\n\n' % ' ;\n'.join([ parent.text for parent in node.ancestors if parent != self.root_node])
+                question_starter = 'For:\n%s ;\n\n' % ' ;\n'.join([ parent.text[:25] + ('...' if len(parent.text) > 25 else '') for parent in node.ancestors if parent != self.root_node])
                 # checks if prev node is not a sibling 
                 # Creates a property question based on subtopic here
                 if prev_node is node.parent:
                     node_layer = [sibling for sibling in node.siblings]
                     node_layer.append(node)
+
+                    # if there is only one property, skip question
+                    if len(node_layer) <= 1:
+                        continue
 
                     temp_term = "%sWhat are the %s properties?" % (question_starter, len(node_layer))
                     temp_definition = '\n'.join([ "%s. " % (i+1) + sibling.text for i, sibling in enumerate(node_layer) ])
@@ -180,9 +184,4 @@ class Document:
         print(RenderTree(self.root_node).by_attr("text"))
         for paragraph in self.annotation_list:
             print(paragraph)
-
-
-
-
-
 
