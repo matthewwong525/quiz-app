@@ -24,7 +24,7 @@ from flask import Flask, render_template, request, flash, redirect
 template_dir = './frontend'
 app = Flask(__name__, template_folder=template_dir)
 
-ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
+ALLOWED_EXTENSIONS = set(['pdf', 'png', 'jpg', 'jpeg'])
 
 @app.route('/')
 def hello():
@@ -46,24 +46,24 @@ def upload_file():
     """
     # check if the post request has the file part
     if 'file' not in request.files:
-        return "No file part"
+        return "No file part", 400
 
     file = request.files['file']
 
     if file.filename == '':
-        return "No selected file"
+        return "No selected file", 400
 
     if not file or not allowed_file(file.filename):
-        return "File extension not allowed"
+        return "File extension not allowed", 400
 
     doc = vision.load_document(file)
     if not doc:
-        return 'Bad Image Data'
+        return 'Bad Image Data', 400
     p = ParagraphHelper(doc=doc)
     paragraph_list = p.get_paragraph_list()
     questions = Document(paragraph_list, p.avg_symbol_width, p.avg_symbol_height).create_questions()
 
-    return questions.json()['url']
+    return questions.json()['url'], 200
 
 
 @app.errorhandler(500)
