@@ -13,7 +13,7 @@
                 $('#quizlet_button').removeAttr('disabled');
                 $('#quizlet_button').css('opacity', '1.0');
                 $('#quizlet_form').attr('action', quizletUrl);
-                alert(quizletUrl)
+                alert('Success!')
             },
             error: function(error) {
                 alert(error.responseText)
