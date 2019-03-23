@@ -8,8 +8,8 @@ class Quizlet:
         self.definitions = definitions
 
     def create_set(self, title):
-        if self.terms == [] or self.definitions == []:
-            return "Document does not have enough info"
+        if len(self.terms) <= 1 or len(self.definitions) <= 1:
+            return None
             
         headers = { 'Authorization': 'Bearer %s' % self.auth_token}
         

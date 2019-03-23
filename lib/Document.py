@@ -186,8 +186,12 @@ class Document:
             terms.extend(temp_terms)
             definitions.extend(temp_definitions)
 
+        if not (terms and definitions):
+            return None
+
         quizlet_client = Quizlet(terms, definitions)
-        return quizlet_client.create_set("Test Set")
+        resp = quizlet_client.create_set("Test Set")
+        return resp
 
     def question_from_text(text):
         sentenceList = Sentence.seperate_sentences(text)
@@ -198,7 +202,6 @@ class Document:
 
 
     def print(self):
-        DotExporter(self.root_node).to_picture("test.png")
         print(RenderTree(self.root_node).by_attr("text"))
         for paragraph in self.annotation_list:
             print(paragraph['text'])
