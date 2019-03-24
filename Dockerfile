@@ -10,11 +10,15 @@ ADD requirements.txt /app/
 RUN pip install -r requirements.txt
 ADD . /app/
 
+# Create credentials file
+#RUN gsutil cp -r gs://quiz-app1313.appspot.com/credentials .
+
 EXPOSE 8080
 ENV NAME quiz-app
-ENV GOOGLE_APPLICATION_CREDENTIALS credentials/quiz-app1313-06f58935bc00.json
+ENV GOOGLE_APPLICATION_CREDENTIALS credentials/gcp_access.json
 
 # Install OS environments
 RUN apt update
 RUN apt -y install poppler-utils
+
 CMD exec gunicorn -b :$PORT main:app

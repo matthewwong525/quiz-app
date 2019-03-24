@@ -64,10 +64,10 @@ def upload_file():
     d = Document(paragraph_list, p.avg_symbol_width, p.avg_symbol_height)
     questions = d.create_questions()
     # logs document structure and question response from quizlet
-    logging.info(d.print())
-    logging.info(questions.json())
-    if questions and questions.status_code >= 400:
+    if not questions or questions.status_code >= 400:
         return 'No questions extracted from doc', 400
+    logging.info(questions.json())
+    logging.info(d.print())
     return questions.json()['url'], 200
 
 
