@@ -134,6 +134,8 @@ class Document:
         terms = []
         definitions = []
 
+        sentence_list = []
+
         for node in node_iter:
             # check if question is empty in node
 
@@ -160,43 +162,41 @@ class Document:
 
             prev_node = node
             
-            # Creates fill in the blank questions here
-            questions = Document.question_from_text(node.text)
-
-            if questions == []:
-                continue
-
-            temp_terms = [ question_starter + question.sentence.return_string() for question in questions]
-            temp_definitions = [str(question.answer.content) for question in questions]
-
-            # extend the question list
-            terms.extend(temp_terms)
-            definitions.extend(temp_definitions)
+            # Appends 
+            temp_sentence_list =re.split('\.', node.text)
+            sentence_list.extend(temp_sentence_list)
 
         for annotation in self.annotation_list:
-            questions = Document.question_from_text(node.text)
+            temp_sentence_list = re.split('\.', annotation['text'])
+            sentence_list.extend(temp_sentence_list)
 
-            if questions == []:
-                continue
 
-            temp_terms = [ question_starter + question.sentence.return_string() for question in questions]
-            temp_definitions = [str(question.answer.content) for question in questions]
+        questions = Document.questions_from_sentlist(sentence_list)
 
-            # extend the question list
-            terms.extend(temp_terms)
-            definitions.extend(temp_definitions)
+        temp_terms = [ question_starter + question.sentence.return_string() for question in questions]
+        temp_definitions = [str(question.answer.content) for question in questions]
+
+        # extend the question list
+        terms.extend(temp_terms)
+        definitions.extend(temp_definitions)
+
+        print('Created terms and definitions')
 
         if not (terms and definitions):
             return None
 
+        print('Now sending response to quizlet')
+
         quizlet_client = Quizlet(terms, definitions)
         resp = quizlet_client.create_set("Test Set")
+
+        print('Received response from quizlet')
         return resp
 
-    def question_from_text(text):
-        sentenceList = Sentence.seperate_sentences(text)
-        sentenceList = Sentence.update_subject(sentenceList)
-        questions = [Question(sentenceList) for sentenceList in sentenceList if Question.is_question(sentenceList)]
+    def questions_from_sentlist(sentence_list):
+        sentenceObjList = Sentence.init_sentences(sentence_list)
+        sentenceObjList = Sentence.update_subject(sentenceObjList)
+        questions = [Question(sent) for sent in sentenceObjList if Question.is_question(sent)]
 
         return questions
 

@@ -36,8 +36,11 @@ def load_document(image, local=False):
         with io.BytesIO() as output:
             pdf_images[0].save(output, file_extension)
             content = output.getvalue()
+        print('Converted PDF')
+
 
     rotated_content = deskew(content, file_extension)
+    print('Rotated content')
 
     client = vision.ImageAnnotatorClient()
     image = types.Image(content=rotated_content)
@@ -45,6 +48,7 @@ def load_document(image, local=False):
     response = client.document_text_detection(image=image)
     if response.error.code != 0:
         return None
+    print('Read image from vision API')
     return response.full_text_annotation
 
 def get_width_height(bounding_box):

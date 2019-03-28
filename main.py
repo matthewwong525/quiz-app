@@ -60,14 +60,15 @@ def upload_file():
     if not doc:
         return 'Bad Image Data', 400
     p = ParagraphHelper(doc=doc)
+    print('Initialized word list')
     paragraph_list = p.get_paragraph_list()
+    print('Created paragraph list from word list')
     d = Document(paragraph_list, p.avg_symbol_width, p.avg_symbol_height)
+    print('Created document from paragraph_list')
     questions = d.create_questions()
     # logs document structure and question response from quizlet
     if not questions or questions.status_code >= 400:
         return 'No questions extracted from doc', 400
-    logging.info(questions.json())
-    logging.info(d.print())
     return questions.json()['url'], 200
 
 
