@@ -1,5 +1,12 @@
 class Word:
     def __init__(self, token=None, text=None):
+        """
+        Initializes word object based on token or text
+
+        Args:
+            token (obj): token object from NLP lib (syntax)
+            text (str): the string of the word
+        """
         if text:
             self.content = text
             self.part_of_speech = 'UNKNOWN'
@@ -16,6 +23,12 @@ class Word:
         self.wiki = None
 
     def add_entity(self, entity):
+        """
+        Adds the entitiy to the word object
+
+        Args:
+            entity (obj): entity object from NLP lib
+        """
         entity_type = ('UNKNOWN', 'PERSON', 'LOCATION', 'ORGANIZATION',
                        'EVENT', 'WORK_OF_ART', 'CONSUMER_GOOD', 'OTHER')
         self.entity = entity['type']

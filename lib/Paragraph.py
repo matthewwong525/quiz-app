@@ -6,6 +6,11 @@ class ParagraphHelper:
         """
         Class that helps produce paragraph lists in the format of (text, bounding box)
 
+        Attributes:
+            word_list (list): list of words
+            avg_symbol_width (float): avg pixel width of symbol
+            avg_symbol_height (float): avg pixel height of symbol 
+
         For Bounding Box (indices):
             0 -  top left
             1 - top right
@@ -17,16 +22,30 @@ class ParagraphHelper:
             self.avg_symbol_height = avg_symbol_width
             self.avg_symbol_width = avg_symbol_height
         else:
+            # helper function which is an alternate way to initalize the ParagraphHelper Class
             self.seperate_to_words(doc)
 
     @staticmethod
     def get_width_height(bounding_box):
+        """
+        Gets the width and the height of the bounding box
+        """
         width = abs(bounding_box.vertices[1].x - bounding_box.vertices[0].x)
         height = abs(bounding_box.vertices[2].y - bounding_box.vertices[1].y)
 
         return width, height
 
     def get_paragraph_obj(self, paragraph_list):
+        """
+        Flattens a nested group of lines and words into a paragraph object which
+        can be more easily interpreted
+
+        Args:
+            paragraph_list (list): A list of representing one paragraph from words and lines
+
+        Returns:
+            paragraph (obj): An object denoting the paragraph: { 'text':.. , 'bounding_box': ...}
+        """
         # flattens all the lines into a list of word
         flattened_paragraph = [ word for line in paragraph_list for word in line ]
 
@@ -94,6 +113,9 @@ class ParagraphHelper:
 
 
     def is_adjacent_word(self, prev_word, curr_word):
+        """
+        Checks if the prev_word is adjacent to the currentw ord
+        """
         lower_x_lim = (prev_word['bounding_box']).vertices[2].x - self.avg_symbol_height * 0.25
         upper_x_lim = (prev_word['bounding_box'].vertices[2].x + self.avg_symbol_width * 10)
         upper_y_lim = (prev_word['bounding_box'].vertices[2].y - self.avg_symbol_height * 1.5)
@@ -108,6 +130,9 @@ class ParagraphHelper:
         return False
 
     def is_next_line(self, line, curr_word, temp_paragraph):
+        """
+        Checks if the current word is on the next line of the previous line
+        """
         # create the bounds that can represent the next line
         # if its the first line, check for an indent
 
@@ -144,6 +169,15 @@ class ParagraphHelper:
 
 
     def seperate_to_words(self, doc):
+        """
+        Seperates the words from the document from Google Vision API
+        into a list of words and calculates the average width and height
+        of a symbol.
+
+        Args:
+            doc (obj): document object form Google Vision API
+
+        """
         breaks = vision.enums.TextAnnotation.DetectedBreak.BreakType
         word_list = []
         avg_symbol_width_list = []
@@ -176,6 +210,9 @@ class ParagraphHelper:
     def get_paragraph_list(self):
         """
         Converts a word list into paragraphs list
+
+        Returns:
+            paragraph_list (list): list of paragraphs with { 'text':.. , 'bounding_box': ...}
 
         TODO: 
             * add a component that queries to find the next word if it is not an adjacent word because

@@ -10,8 +10,13 @@ class Sentence:
 
     def __init__(self, entity_obj, syntax_obj, sent):
         """
-        TODO:
-            * Make it only request NLP one time rather than one time for every sentence.
+        Initializes the sentence Object
+
+        Args:
+            entiity_obj (obj): a json response object returned from NLP lib for the syntax of the sentence
+            syntax_obj (obj): a json response object returned from NLP lib for the entity of the sentence
+            sent (string): the string value of the text
+
         """
         self.subject = None
 
@@ -87,6 +92,11 @@ class Sentence:
 
     @staticmethod
     def update_subject(sentence_list):
+        """
+        Updates the sentence list based on the subject and carries over subjects
+        (Look into whether or not to remove this)
+
+        """
         previous_subject = None
         for sentence in sentence_list:
             nouns = [word for word in sentence.words if word.part_of_speech == 'NOUN' or word.part_of_speech == 'PRON']
@@ -110,6 +120,15 @@ class Sentence:
 
     @staticmethod
     def init_sentences(sentence_list):
+        """
+        Initializes a list of sentences and performs the NLP requests
+
+        Args:
+            sentence_list ([str]): A list of sentences in text
+
+        Returns:
+            sentence_obj_list (list): A list of Sentence objects from the sentence_list 
+        """
         # asynchronous requests with entities and lists
         async_req = AsyncRequest()
         entity_list = async_req.analyze_entities(sentence_list)

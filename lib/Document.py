@@ -9,6 +9,18 @@ class Document:
     def __init__(self, paragraph_list, symbol_width, symbol_height):
         """
         Creates a tree structure that outlines the nested structure of the document
+
+        Args:
+            paragraph_list (list): list of paragraphs with { 'text':.. , 'bounding_box': ...}
+            symbol_width (float): avg pixel width of symbol
+            symbol_height (float): avg pixel height of symbol 
+
+        Attributes:
+            root_node (Node): the root node of the tree structure
+            annotation_list (list): the extra paragraphs that don't fit within the tree structure
+            symbol_width (float): avg pixel width of symbol
+            symbol_height (float): avg pixel height of symbol 
+
         TODO:
             * Rotate image so that the text can be aligned before sending it to the vision api
             * Deal with differen columns on the same page
@@ -62,6 +74,12 @@ class Document:
         Top left node is defined as the left most paragraph within the first 5
         paragraphs
 
+        Args:
+            paragraph_list (list): list of paragraphs with { 'text':.. , 'bounding_box': ...}
+
+        Returns:
+            idx (int): the index within the paragraph list
+
         TODO:
             * Think of a way to make this better because might have to distinguish
               between a diagram and text files.
@@ -74,6 +92,13 @@ class Document:
         """
         Finds nodes in the same layer based on the x_value of the paragraph of the
         bounded box
+
+        Args:
+            paragraph_list (list): list of paragraphs with { 'text':.. , 'bounding_box': ...}
+            top_left_x_val (int): the pixel x value of the top left paragraph
+
+        Returns:
+            top_layer_list (list): list of paragraphs that belong in the same layer in the tree structure 
         """
         top_layer_list = [] 
         remove_idx_list = []
@@ -98,6 +123,14 @@ class Document:
         """
         Returns indices that match this current layer to the previous layer
         Essentially matches the children nodes to the parent nodes
+
+        Args:
+            layer_list (list): the current layer list in tree structure
+            prev_layer_list (list): the previous layer list in tree structure
+
+        Returns:
+            parent_node_idx_list (list): list of indices of the parent nodes
+
         """
         parent_node_idx_list = []
 
@@ -127,6 +160,14 @@ class Document:
         return parent_node_idx_list
 
     def create_questions(self):
+        """
+        Gathers the tree structure and annotation list and generates questions.
+        Afterwards, it gathers the questions and sends the questions to Quizlet and
+        returns the response from Quizlet
+
+        Returns:
+            resp (obj): the json response from Quizlet
+        """
         prev_node = self.root_node
         node_iter = PreOrderIter(prev_node)
         question_list = []
@@ -194,6 +235,15 @@ class Document:
         return resp
 
     def questions_from_sentlist(sentence_list):
+        """
+        Creates questions from a list of sentences
+
+        Args:
+            sentence_list (list): a list of strings denoting the sentences
+
+        Returns:
+            questions ([Question]): list of question objects
+        """
         sentenceObjList = Sentence.init_sentences(sentence_list)
         sentenceObjList = Sentence.update_subject(sentenceObjList)
         questions = [Question(sent) for sent in sentenceObjList if Question.is_question(sent)]
@@ -202,6 +252,9 @@ class Document:
 
 
     def print(self):
+        """
+        Prints the tree as well as the annotation list
+        """
         print(RenderTree(self.root_node).by_attr("text"))
         for paragraph in self.annotation_list:
             print(paragraph['text'])

@@ -8,10 +8,21 @@ class Question:
     __key_words = ('is', 'was', 'because', 'in', 'during', 'between')
 
     def __init__(self, sentence):
+        """
+        Initializes the questions object
+
+        Args:
+            sentence (obj): Sentence object
+            answer (str): the answer of the fill in the blank from the question
+        """
         self.sentence = sentence
         self.answer = self.generate_blank()
 
     def generate_blank(self):
+        """
+        Generates a blank in the question based on the entity and returns
+        a string representing the answer
+        """
         # sorts the words by highest salience first
         words = sorted(self.sentence.words, key=lambda x: x.salience, reverse=True)
         # keep only the words that are entities
@@ -28,6 +39,9 @@ class Question:
 
     @staticmethod
     def is_question(sentence):
+        """
+        Checks if the sentence is a question
+        """
         # gets list of all entities in the sentence
         entities = [word for word in sentence.words if word.entity]
 
@@ -44,6 +58,10 @@ class Question:
 
     @staticmethod
     def get_wiki_questions(sentence):
+        """
+        Creates a question wiki question based on the wiki page
+        (Still in construction)
+        """
         wiki_links = set([word.wiki for word in sentence.words if word.wiki and word.salience > 0.25])
         if len(wiki_links) == 0:
             return Question(sentence)

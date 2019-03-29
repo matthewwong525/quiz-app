@@ -22,6 +22,16 @@ def get_page_size(doc):
     return doc.pages[0].width, doc.pages[0].height
 
 def load_document(image, local=False):
+    """
+    Loads the document and into a full text annotation using the vision library
+
+    Args:
+        image (Image): an image file to be read
+        local (bool): a flag to tell the program if the Image object was read locally
+
+    Returns:
+        response (obj): a response of the full text annotation of the image inputted
+    """
     filename, file_extension = os.path.splitext(image.filename) if not local else os.path.splitext(image.name)
     file_extension = file_extension.replace('.', '')
     if file_extension.lower() == 'jpg':
@@ -58,7 +68,20 @@ def get_width_height(bounding_box):
     return width, height
 
 def deskew(content, ext):
+    """
+    Deskews the image so that the text is aligned upright.
+    The skew process does not take into account images that are
+    skewed more than 45 degrees.
+
+    Args:
+        content (bytes): image content in bytes
+        ext (string): extension of the image
+
+    Returns:
+        contents (bytes): rotated image in bytes
+    """
     image = imread(content, plugin="imageio", as_gray=True)
+
     #threshold to get rid of extraneous noise
     thresh = threshold_otsu(image)
     normalize = image > thresh
