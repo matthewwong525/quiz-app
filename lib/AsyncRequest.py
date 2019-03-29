@@ -41,10 +41,16 @@ class AsyncRequest:
 
     def analyze_syntax(self, text_list):
         url = 'https://language.googleapis.com/v1/documents:analyzeSyntax'
-        syntax_list = asyncio.run(self.nlp_req(url, text_list))
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        syntax_list = loop.run_until_complete(self.nlp_req(url, text_list))
+        loop.close()
         return syntax_list
 
     def analyze_entities(self, text_list):
         url = 'https://language.googleapis.com/v1/documents:analyzeEntities'
-        entities_list = asyncio.run(self.nlp_req(url, text_list))
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        entities_list = loop.run_until_complete(self.nlp_req(url, text_list))
+        loop.close()
         return entities_list
