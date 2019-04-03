@@ -7,6 +7,7 @@ RUN virtualenv --no-download /env -p python3.6
 ENV VIRTUAL_ENV /env
 ENV PATH /env/bin:$PATH
 ADD requirements.txt /app/
+RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 ADD . /app/
 
@@ -19,6 +20,6 @@ ENV GOOGLE_APPLICATION_CREDENTIALS credentials/gcp_access.json
 
 # Install OS environments
 RUN apt update
-RUN apt -y install poppler-utils
+RUN apt -y install poppler-utils libsm6 libxext6
 
 CMD exec gunicorn -b :$PORT main:app
