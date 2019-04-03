@@ -15,7 +15,7 @@
 # [START gae_flex_quickstart]
 import logging
 import os
-from lib import vision
+from lib.Vision import Vision
 from lib.Document import Document
 from lib.Paragraph import ParagraphHelper
 
@@ -56,15 +56,16 @@ def upload_file():
     if not file or not allowed_file(file.filename):
         return "File extension not allowed", 400
 
-    doc = vision.load_document(file)
-    if not doc:
+    vis = Vision(file)
+    if not vis.word_list:
         return 'Bad Image Data', 400
-    p = ParagraphHelper(doc=doc)
-    print('Initialized word list')
+    p = vis.get_paragraph_helper()
+    print('Initialized vision class')
     paragraph_list = p.get_paragraph_list()
     print('Created paragraph list from word list')
     d = Document(paragraph_list, p.avg_symbol_width, p.avg_symbol_height)
     print('Created document from paragraph_list')
+    d.print()
     questions = d.create_questions()
     # logs document structure and question response from quizlet
     if not questions or questions.status_code >= 400:
