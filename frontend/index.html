@@ -76,10 +76,14 @@
                             <label id="upload_button_vis" class="btn btn-block btn-outline-light" for="my-file-selector" style="cursor: pointer; font-size: 2.5em">
                                 <i class="fas fa-upload mr-2"></i>
                                 Upload
-                                <input accept=".jpg,.jpeg,.png,.pdf" id="my-file-selector" name="file" type="file" hidden onchange="$('#upload-file-info').html(this.files[0].name)">
+                                <input accept=".jpg,.jpeg,.png,.pdf" id="my-file-selector" name="file" type="file" hidden>
                             </label>
                         </div>
-                        <span class='label label-info' id="upload-file-info">JPG, JPEG, PNG, and PDFs only</span>
+                        <span class='label label-info ml-auto' id="upload-file-info">JPG, JPEG, PNG, and PDFs only</span>
+                        <div>
+                            <i class="fas fa-times-circle fa-lg" id="file-refresh" hidden></i>
+                        </div>
+                        
                     </div>
                     <div class="form-group col-md-6">
                         <div class="text-center mt-4">

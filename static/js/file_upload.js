@@ -27,6 +27,7 @@
             },
             complete: function(resp) {
                 $('#quizlet_loader').attr('hidden', '');
+                $('#file-refresh').removeClass('disabled')
             }
         });
         $('#quizlet_loader').removeAttr('hidden');
@@ -37,5 +38,26 @@
         $('#my-file-selector').prop('disabled', true)
         $('#upload_button_vis').addClass('disabled')
         $('#upload_button_vis').css('cursor', 'default')
+        $('#file-refresh').addClass('disabled')
+    });
+
+    $("#file-refresh").on('click', function(event){
+        if(!$("#file-refresh").hasClass('disabled')){
+            $('#upload-file-info').html('JPG, JPEG, PNG, and PDFs only');
+            $('#file-refresh').attr('hidden', '');
+
+            $('#submit_button').removeAttr('disabled')
+            $('#submit_button_vis').removeClass('disabled')
+            $('#submit_button_vis').css('cursor', 'pointer')
+
+            $('#my-file-selector').removeAttr('disabled')
+            $('#upload_button_vis').removeClass('disabled')
+            $('#upload_button_vis').css('cursor', 'pointer')
+        }
+    });
+
+    $("#my-file-selector").on('change', function(event){
+        $('#upload-file-info').html(event.target.files[0].name);
+        $('#file-refresh').removeAttr('hidden');
     });
 })(jQuery);
