@@ -201,6 +201,9 @@ class ParagraphHelper:
                             avg_symbol_width_list.append(width)
                             avg_symbol_height_list.append(height)
 
+        if len(avg_symbol_width_list) == 0 or len(avg_symbol_height_list) == 0:
+            return None
+
         self.avg_symbol_width = sum(avg_symbol_width_list) / len(avg_symbol_width_list)
         self.avg_symbol_height = sum(avg_symbol_height_list) / len(avg_symbol_height_list)
 

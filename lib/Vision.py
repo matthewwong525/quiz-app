@@ -55,8 +55,9 @@ class Vision():
         self.file_name = file_name
         self.orig_img_bytes = content
         self.process_img_bytes = content
+
         paragraph_helper = self.get_paragraph_helper()
-        if paragraph_helper:
+        if paragraph_helper and hasattr(paragraph_helper, 'word_list'):
             self.word_list = paragraph_helper.word_list
         else:
             return None

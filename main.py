@@ -19,7 +19,7 @@ from lib.Vision import Vision
 from lib.Document import Document
 from lib.Paragraph import ParagraphHelper
 
-from flask import Flask, render_template, request, flash, redirect
+from flask import Flask, render_template, request, flash, redirect, Response, jsonify
 
 template_dir = './frontend'
 app = Flask(__name__, template_folder=template_dir)
@@ -34,7 +34,7 @@ def hello():
 
 def allowed_file(filename):
     return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 @app.route('/upload', methods=['POST'])
@@ -51,13 +51,13 @@ def upload_file():
     file = request.files['file']
 
     if file.filename == '':
-        return "No selected file", 400
+        return "No selected file" , 400
 
     if not file or not allowed_file(file.filename):
         return "File extension not allowed", 400
 
     vis = Vision(file)
-    if not vis.word_list:
+    if not hasattr(vis, 'word_list'):
         return 'Bad Image Data', 400
     p = vis.get_paragraph_helper()
     print('Initialized vision class')
