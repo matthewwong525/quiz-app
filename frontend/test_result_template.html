@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Results</title>
+    <!-- Bootstrap core CSS -->
+    <link href="../static/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        {% for result in results %}
+        <br>
+        <div>
+            <h4>{{ result.file_name }}{{ result.file_ext }}</h4>
+        </div>
+        <div class="row">
+            <div class="col">
+                <h5>Original Pic</h5>
+                <img class="img-fluid" src="{{result.orig_file_path}}" alt="">
+            </div>
+            <div class="col">
+                <h5>Processed Pic</h5>
+                <img class="img-fluid" src="{{result.process_file_path}}" alt="">
+            </div>
+            <div class="col-6">
+                <div>
+                    <h5>Document Structure</h5>
+                    <pre>{{ result.doc_structure }}</pre>
+                </div>
+            </div>
+        </div>
+        <br>
+        <div>
+            <h5>Annotation List</h5>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">Text</th>
+                        <th scope="col">Top Left</th>
+                        <th scope="col">Bottom Right</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for annotation in result.annotation_list %}
+                    <tr>
+                        <td>{{ annotation.text }}</td>
+                        <td>{{ annotation.bounding_box.top_left }}</td>
+                        <td>{{ annotation.bounding_box.bot_right }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <br>
+        <div>
+            <h5>Terms and Definitions</h5>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">Terms</th>
+                        <th scope="col">Definitions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for term, definition in zip(result.terms, result.definitions) %}
+                    <tr>
+                        <td>{{term}}</td>
+                        <td>{{definition}}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <hr>
+        <hr>
+        {% endfor %}
+    </div>
+    <!-- Bootstrap core JavaScript -->
+    <script src="../static/vendor/jquery/jquery.min.js"></script>
+    <script src="../static/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

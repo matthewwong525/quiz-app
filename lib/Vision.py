@@ -49,7 +49,6 @@ class Vision():
                 # gets first page of pdf document!
                 pdf_images[0].save(output, file_ext)
                 content = output.getvalue()
-            print('Converted PDF')
 
         self.file_ext = file_ext
         self.file_name = file_name
@@ -61,16 +60,13 @@ class Vision():
             self.word_list = paragraph_helper.word_list
         else:
             return None
-        print('Successfully read image from vision API')
 
         # image pre-processing done here
         self.image_scale = 1
         self.doc_border = self.get_doc_border()
         if self.all_words_in_doc():
             self.correct_perspective()
-            print('Corrected Perspective of Image')
         self.deskew()
-        print('Deskewed Image')
 
 
     def get_paragraph_helper(self):
@@ -182,7 +178,7 @@ class Vision():
         Returns:
             contents (bytes): rotated image in bytes
         """
-        image = imread(self.orig_img_bytes, plugin="imageio", as_gray=True)
+        image = imread(self.process_img_bytes, plugin="imageio", as_gray=True)
 
         #threshold to get rid of extraneous noise
         thresh = threshold_otsu(image)
@@ -224,7 +220,7 @@ class Vision():
             return True
 
         # Convert image to PIL image to be rotated
-        original_image = Image.open(io.BytesIO(self.orig_img_bytes))
+        original_image = Image.open(io.BytesIO(self.process_img_bytes))
         rotated_image = original_image.rotate(rotation_number, resample=Image.BICUBIC, expand=True)
 
         # Convert PIL obj to bytes

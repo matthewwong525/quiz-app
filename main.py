@@ -18,6 +18,7 @@ import os
 from lib.Vision import Vision
 from lib.Document import Document
 from lib.Paragraph import ParagraphHelper
+from lib.Quizlet import Quizlet
 
 from flask import Flask, render_template, request, flash, redirect, Response, jsonify
 
@@ -66,11 +67,21 @@ def upload_file():
     d = Document(paragraph_list, p.avg_symbol_width, p.avg_symbol_height)
     print('Created document from paragraph_list')
     d.print()
-    questions = d.create_questions()
-    # logs document structure and question response from quizlet
-    if not questions or questions.status_code >= 400:
+
+    terms, definitions = d.create_questions()
+    print('Created terms and definitions')
+
+    if not (terms and definitions):
         return 'No questions extracted from doc', 400
-    return questions.json()['url'], 200
+
+    quizlet_client = Quizlet(terms, definitions)
+    resp = quizlet_client.create_set(file.filename + " Question Set")
+
+    print('Received response from quizlet')
+    # logs document structure and question response from quizlet
+    if not resp or resp.status_code >= 400:
+        return 'No questions extracted from doc', 400
+    return resp.json()['url'], 200
 
 
 @app.errorhandler(500)

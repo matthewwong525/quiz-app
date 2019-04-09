@@ -221,18 +221,7 @@ class Document:
         terms.extend(temp_terms)
         definitions.extend(temp_definitions)
 
-        print('Created terms and definitions')
-
-        if not (terms and definitions):
-            return None
-
-        print('Now sending response to quizlet')
-
-        quizlet_client = Quizlet(terms, definitions)
-        resp = quizlet_client.create_set("Test Set")
-
-        print('Received response from quizlet')
-        return resp
+        return terms, definitions
 
     def questions_from_sentlist(sentence_list):
         """
