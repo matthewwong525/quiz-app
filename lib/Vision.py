@@ -159,6 +159,7 @@ class Vision():
         for word in self.word_list:
             for p in word['bounding_box'].vertices:
                 if not mapper.check_in_polygon((p.x, p.y), self.doc_border):
+                    print("%s.%s" % (self.file_name, self.file_ext))
                     print(word['text'])
                     print(p)
                     return False

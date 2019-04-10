@@ -134,10 +134,7 @@ class Sentence:
         entity_list = async_req.analyze_entities(sentence_list)
         syntax_list = async_req.analyze_syntax(sentence_list)
 
-        print('Performed async request to library')
-
         sentence_obj_list = [ Sentence(ent_obj, synt_obj, sent) for ent_obj, synt_obj, sent in zip(entity_list, syntax_list, sentence_list) ]
-        print('Created Sentence obj list')
         return sentence_obj_list
 
 

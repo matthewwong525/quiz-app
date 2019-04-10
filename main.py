@@ -50,6 +50,10 @@ def upload_file():
         return "No file part", 400
 
     file = request.files['file']
+    num_files = request.form['num_files']
+
+    if not str.isdigit(num_files) or int(num_files) > 5:
+        return "No more than 5 files", 400
 
     if file.filename == '':
         return "No selected file" , 400
@@ -59,30 +63,31 @@ def upload_file():
 
     vis = Vision(file)
     if not hasattr(vis, 'word_list'):
-        return 'Bad Image Data', 400
+        return '%s.%s' % (vis.file_name, vis.file_ext) + ' has Bad Image Data', 400
     p = vis.get_paragraph_helper()
-    print('Initialized vision class')
     paragraph_list = p.get_paragraph_list()
-    print('Created paragraph list from word list')
     d = Document(paragraph_list, p.avg_symbol_width, p.avg_symbol_height)
-    print('Created document from paragraph_list')
-    d.print()
-
     terms, definitions = d.create_questions()
-    print('Created terms and definitions')
 
     if not (terms and definitions):
-        return 'No questions extracted from doc', 400
+        return 'No questions extracted from ' + '%s.%s' % (vis.file_name, vis.file_ext), 400
+
+    return jsonify({'terms': terms, 'definitions': definitions})
+
+
+@app.route('/question_set', methods=['POST'])
+def get_question_set():
+    body = request.get_json()
+    terms = body['terms']
+    definitions = body['definitions']
 
     quizlet_client = Quizlet(terms, definitions)
-    resp = quizlet_client.create_set(file.filename + " Question Set")
-
-    print('Received response from quizlet')
+    resp = quizlet_client.create_set(body['filename'] + " Question Set")
+    
     # logs document structure and question response from quizlet
     if not resp or resp.status_code >= 400:
-        return 'No questions extracted from doc', 400
-    return resp.json()['url'], 200
-
+        return 'Failed to create question set', 400
+    return jsonify(resp.json()), 200
 
 @app.errorhandler(500)
 def server_error(e):

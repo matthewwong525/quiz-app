@@ -76,7 +76,7 @@
                             <label id="upload_button_vis" class="btn btn-block btn-outline-light" for="my-file-selector" style="cursor: pointer; font-size: 2.5em">
                                 <i class="fas fa-upload mr-2"></i>
                                 Upload
-                                <input accept=".jpg,.jpeg,.png,.pdf" id="my-file-selector" name="file" type="file" hidden>
+                                <input accept=".jpg,.jpeg,.png,.pdf" id="my-file-selector" name="file" type="file" hidden multiple>
                             </label>
                         </div>
                         <span class='label label-info ml-auto' id="upload-file-info">JPG, JPEG, PNG, and PDFs only</span>
@@ -97,7 +97,7 @@
             </form>
             <div class="text-center">
                 <form id="quizlet_form" action="#" method="get" target="_blank">
-                    <input id="quizlet_button" type="image" src="/static/img/quizlet_logo.png" href="#" style="border-radius: 1rem; width: 10em; height: 4em; opacity: 0.6;" class="shadow" onmouseover="$(this).removeClass('shadow')" onmouseleave="$(this).addClass('shadow')" disabled align="middle" />
+                    <input id="quizlet_button" type="image" src="/static/img/quizlet_logo.png" href="#" style="border-radius: 1rem; width: 15em; height: 6em; opacity: 0.4;" class="shadow" onmouseover="$(this).removeClass('shadow')" onmouseleave="$(this).addClass('shadow')" disabled align="middle" />
                 </form>
                 <div id="quizlet_loader" class="spinner-border mt-3" role="status" hidden>
                     <span class="sr-only">Loading...</span>
