@@ -120,13 +120,14 @@ def print_tests(tests, test_defs):
 
 
 if __name__ == "__main__":
-    mypath = '../photos of text/'
+    mypath = '../note_pics/'
     files = []
 
     
 
     for (dirpath, dirnames, filenames) in walk(mypath):
         files.extend([ dirpath+file for file in filenames])
+        break
 
     result_list = []
     for file in files[:7]:
