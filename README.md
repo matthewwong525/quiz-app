@@ -43,11 +43,18 @@ Download the entire `credentials` directory from (https://console.cloud.google.c
 
 ```
 gsutil cp -r gs://myquizpal.appspot.com/credentials .
+export GOOGLE_APPLICATION_CREDENTIALS="credentials/gcp_access.json"
 ```
 
 Note: you need permissions to do this
 
-4. Test if everything works!
+4. Download models
+
+```
+gsutil cp "gs://myquizpal.appspot.com/ML Models/glove.6B.100d.txt" .
+```
+
+5. Test if everything works!
 
 Run script below to see if everything works! A local server should start and you should be able to develop locally
 
