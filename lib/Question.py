@@ -44,17 +44,16 @@ class Question:
         """
         # gets list of all entities in the sentence
         entities = [word for word in sentence.words if word.entity]
+        pos_list = [word.part_of_speech for word in sentence.words]
+        max_salience = max([word.salience for word in sentence.words])
+
 
         # gets all the words in the sentence as a list of strings
         words = sentence.return_string().split()
-
-        if len(entities) == 0:
+        if len(entities) == 0 or len(sentence.words) <= 1 or max_salience < 0.1 or ('VERB' not in pos_list):
             return False
 
-        # else
-        for word in words:
-            if word in Question.__key_words:
-                return True
+        return True
 
     @staticmethod
     def get_wiki_questions(sentence):

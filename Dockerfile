@@ -14,6 +14,9 @@ ADD . /app/
 # Create credentials file
 #RUN gsutil cp -r gs://quiz-app1313.appspot.com/credentials .
 
+# Grab models
+RUN gsutil cp "gs://myquizpal.appspot.com/ML Models/glove.6B.100d.txt" .
+
 EXPOSE 8080
 ENV NAME quiz-app
 ENV GOOGLE_APPLICATION_CREDENTIALS credentials/gcp_access.json

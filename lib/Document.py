@@ -4,6 +4,9 @@ from lib.Sentence import Sentence
 from lib.Question import Question
 from lib.Quizlet import Quizlet
 import re
+import requests
+from nltk.tokenize import sent_tokenize
+from flask import request
 
 class Document:
     def __init__(self, paragraph_list, symbol_width, symbol_height):
@@ -184,7 +187,7 @@ class Document:
                 continue
 
             question_starter = ''
-            if len(node.ancestors) > 1:
+            if len(node.ancestors) > 1 and len(self.root_node.descendants) > len(self.annotation_list):
                 question_starter = 'For:\n%s ;\n\n' % ' ;\n'.join([ parent.text[:25] + ('...' if len(parent.text) > 25 else '') for parent in node.ancestors if parent != self.root_node])
                 # checks if prev node is not a sibling 
                 # Creates a property question based on subtopic here
@@ -204,17 +207,21 @@ class Document:
             prev_node = node
             
             # Appends 
-            temp_sentence_list =re.split('\.', node.text)
+            temp_sentence_list =sent_tokenize(node.text)
             sentence_list.extend(temp_sentence_list)
 
         for annotation in self.annotation_list:
-            temp_sentence_list = re.split('\.', annotation['text'])
+            temp_sentence_list = sent_tokenize(annotation['text'])
             sentence_list.extend(temp_sentence_list)
 
 
         questions = Document.questions_from_sentlist(sentence_list)
 
-        temp_terms = [ question_starter + question.sentence.return_string() for question in questions]
+        if not questions:
+            print('Failed to score sentences')
+            return terms, definitions
+
+        temp_terms = [question.sentence.return_string() for question in questions]
         temp_definitions = [str(question.answer.content) for question in questions]
 
         # extend the question list
@@ -233,9 +240,18 @@ class Document:
         Returns:
             questions ([Question]): list of question objects
         """
+        try:
+            sent_scores = requests.post(request.url_root + 'get_sent_scores', json={"sentences": sentence_list}).json()
+        except:
+            return None
         sentenceObjList = Sentence.init_sentences(sentence_list)
         sentenceObjList = Sentence.update_subject(sentenceObjList)
-        questions = [Question(sent) for sent in sentenceObjList if Question.is_question(sent)]
+
+        # sorts sentences by score and takes the first few sentences and creates fib questions
+        num_questions = int(len(sentence_list)*0.3)
+        ranked_sentences = sorted(((sent_scores[str(i)],s) for i,s in enumerate(sentenceObjList)), reverse=True, key=lambda s: s[0])
+        print([sent[1].return_string() for sent in ranked_sentences[:num_questions]])
+        questions = [Question(sent[1]) for sent in ranked_sentences[:num_questions] if Question.is_question(sent[1])]
 
         return questions
 

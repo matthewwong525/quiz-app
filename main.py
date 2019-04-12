@@ -19,6 +19,8 @@ from lib.Vision import Vision
 from lib.Document import Document
 from lib.Paragraph import ParagraphHelper
 from lib.Quizlet import Quizlet
+from lib.scripts import text_summarize
+import nltk
 
 from flask import Flask, render_template, request, flash, redirect, Response, jsonify
 
@@ -26,6 +28,21 @@ template_dir = './frontend'
 app = Flask(__name__, template_folder=template_dir)
 
 ALLOWED_EXTENSIONS = set(['pdf', 'png', 'jpg', 'jpeg'])
+
+WORD_EMBEDDINGS = None
+
+def init_model():
+    global WORD_EMBEDDINGS
+    nltk.download('punkt') # one time execution
+    nltk.download('stopwords')
+    WORD_EMBEDDINGS = text_summarize.extract_word_vec()
+    print('initialized model')
+
+@app.route('/get_sent_scores', methods=['POST'])
+def get_sent_scores():
+    body = request.get_json()
+    sentences = text_summarize.get_sent_scores(WORD_EMBEDDINGS, body['sentences'])
+    return jsonify( sentences )
 
 @app.route('/')
 def hello():
@@ -83,7 +100,7 @@ def get_question_set():
 
     quizlet_client = Quizlet(terms, definitions)
     resp = quizlet_client.create_set(body['filename'] + " Question Set")
-    
+
     # logs document structure and question response from quizlet
     if not resp or resp.status_code >= 400:
         return 'Failed to create question set', 400
@@ -99,6 +116,7 @@ def server_error(e):
 
 
 if __name__ == '__main__':
+    init_model()
     # This is used when running locally. Gunicorn is used to run the
     # application on Google App Engine. See entrypoint in app.yaml.
     app.run(host='127.0.0.1', port=8080, debug=True)

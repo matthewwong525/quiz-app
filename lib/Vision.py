@@ -2,7 +2,7 @@ from google.cloud import vision
 from google.cloud.vision import types
 from lib.Document import Document
 from lib.Paragraph import ParagraphHelper
-from lib import mapper
+from lib.scripts import mapper
 
 import pdf2image
 import cv2
