@@ -1,5 +1,6 @@
 from anytree import Node, RenderTree, PreOrderIter
 from anytree.exporter import DotExporter
+from anytree.search import find
 from lib.Sentence import Sentence
 from lib.Question import Question
 from lib.Quizlet import Quizlet
@@ -186,23 +187,22 @@ class Document:
             if node == self.root_node:
                 continue
 
-            question_starter = ''
-            if len(node.ancestors) > 1 and len(self.root_node.descendants) > len(self.annotation_list):
-                question_starter = 'For:\n%s ;\n\n' % ' ;\n'.join([ parent.text[:25] + ('...' if len(parent.text) > 25 else '') for parent in node.ancestors if parent != self.root_node])
-                # checks if prev node is not a sibling 
-                # Creates a property question based on subtopic here
-                if prev_node is node.parent:
-                    node_layer = [sibling for sibling in node.siblings]
-                    node_layer.append(node)
+            question_starter = self.get_question_starter(node=node)
 
-                    # if there is only one property, skip question
-                    if len(node_layer) <= 1:
-                        continue
+            # checks if prev node is not a sibling 
+            # Creates a property question based on subtopic here
+            if question_starter != '' and prev_node is node.parent and len(self.root_node.descendants) > len(self.annotation_list):
+                node_layer = [sibling for sibling in node.siblings]
+                node_layer.append(node)
 
-                    temp_term = "%sWhat are the %s properties?" % (question_starter, len(node_layer))
-                    temp_definition = '\n'.join([ "%s. " % (i+1) + sibling.text for i, sibling in enumerate(node_layer) ])
-                    terms.append(temp_term)
-                    definitions.append(temp_definition)
+                # if there is only one property, skip question
+                if len(node_layer) <= 1:
+                    continue
+
+                temp_term = "%sWhat are the %s properties?" % (question_starter, len(node_layer))
+                temp_definition = '\n'.join([ "%s. " % (i+1) + sibling.text for i, sibling in enumerate(node_layer) ])
+                terms.append(temp_term)
+                definitions.append(temp_definition)
 
             prev_node = node
             
@@ -214,14 +214,13 @@ class Document:
             temp_sentence_list = sent_tokenize(annotation['text'])
             sentence_list.extend(temp_sentence_list)
 
-
         questions = Document.questions_from_sentlist(sentence_list)
 
         if not questions:
             print('Failed to score sentences')
             return terms, definitions
 
-        temp_terms = [question.sentence.return_string() for question in questions]
+        temp_terms = [ question.sentence.return_string() for question in questions]
         temp_definitions = [str(question.answer.content) for question in questions]
 
         # extend the question list
@@ -229,6 +228,14 @@ class Document:
         definitions.extend(temp_definitions)
 
         return terms, definitions
+
+    def get_question_starter(self, node=None, text=''):
+        question_starter = ''
+
+        if node and len(node.ancestors) > 1:
+            question_starter = 'For:\n%s ;\n\n' % ' ;\n'.join([ parent.text[:25] + ('...' if len(parent.text) > 25 else '') for parent in node.ancestors if parent != self.root_node])
+        
+        return question_starter
 
     def questions_from_sentlist(sentence_list):
         """
@@ -241,7 +248,7 @@ class Document:
             questions ([Question]): list of question objects
         """
         try:
-            sent_scores = requests.post(request.url_root + 'get_sent_scores', json={"sentences": sentence_list}).json()
+            sent_scores = requests.post('http://localhost:8080/' + 'get_sent_scores', json={"sentences": sentence_list}).json()
         except:
             return None
         sentenceObjList = Sentence.init_sentences(sentence_list)
@@ -249,8 +256,7 @@ class Document:
 
         # sorts sentences by score and takes the first few sentences and creates fib questions
         num_questions = int(len(sentence_list)*0.3)
-        ranked_sentences = sorted(((sent_scores[str(i)],s) for i,s in enumerate(sentenceObjList)), reverse=True, key=lambda s: s[0])
-        print([sent[1].return_string() for sent in ranked_sentences[:num_questions]])
+        ranked_sentences = sorted(((sent_scores[str(i)], s) for i,s in enumerate(sentenceObjList)), reverse=True, key=lambda s: s[0])
         questions = [Question(sent[1]) for sent in ranked_sentences[:num_questions] if Question.is_question(sent[1])]
 
         return questions

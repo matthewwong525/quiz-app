@@ -13,7 +13,7 @@ from lib.Quizlet import Quizlet
 
 from anytree import RenderTree
 from anytree.exporter import DictExporter
-import unittest
+import requests
 
 
 env = Environment(
@@ -120,20 +120,21 @@ def print_tests(tests, test_defs):
 
 
 if __name__ == "__main__":
-    mypath = '../note_pics/'
+    mypath = 'test_imgs/'
     files = []
 
-    
+    ignore_dirs = ['processed', 'not_working']
 
     for (dirpath, dirnames, filenames) in walk(mypath):
-        files.extend([ dirpath+file for file in filenames])
-        break
+        if dirpath.replace(mypath, '').split('/')[0] not in ignore_dirs:
+            files.extend([ dirpath+'/'+file for file in filenames if file != '.DS_Store'])
+        
 
     result_list = []
-    for file in files[:7]:
+    for file in files:
         result = test_case(file)
         result['orig_file_path'] = '../' + file
-        result['process_file_path'] = mypath + "processed/%s%s" % (result['file_name'].split('/')[-1], result['file_ext'])
+        result['process_file_path'] = mypath + "processed%s" % (file.replace(mypath,'/'))
         result['terms_n_defs'] = zip(result['terms'], result['definitions'])
         with open(result['process_file_path'], "wb+") as fh:
             fh.write(result['process_pic'])
@@ -144,6 +145,7 @@ if __name__ == "__main__":
     output = template.render(results=result_list, zip=zip)
     with open("frontend/test_results.html", "w") as fh:
         fh.write(output)
+        
 """
     with open('results.json', 'w') as outfile:
         json.dump(result, outfile, sort_keys=True, indent=4)
