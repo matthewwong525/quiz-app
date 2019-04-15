@@ -180,6 +180,7 @@ class Document:
         definitions = []
 
         sentence_list = []
+        question_starter_list = []
 
         for node in node_iter:
             # check if question is empty in node
@@ -187,11 +188,13 @@ class Document:
             if node == self.root_node:
                 continue
 
-            question_starter = self.get_question_starter(node=node)
+            # Gets the string that prefaces that question
+            question_starter = ''
 
             # checks if prev node is not a sibling 
             # Creates a property question based on subtopic here
-            if question_starter != '' and prev_node is node.parent and len(self.root_node.descendants) > len(self.annotation_list):
+            if prev_node is node.parent and len(self.root_node.descendants) > len(self.annotation_list):
+                question_starter = self.get_question_starter(node=node)
                 node_layer = [sibling for sibling in node.siblings]
                 node_layer.append(node)
 
@@ -209,18 +212,19 @@ class Document:
             # Appends 
             temp_sentence_list =sent_tokenize(node.text)
             sentence_list.extend(temp_sentence_list)
+            question_starter_list.extend([question_starter] * len(temp_sentence_list))
 
         for annotation in self.annotation_list:
             temp_sentence_list = sent_tokenize(annotation['text'])
             sentence_list.extend(temp_sentence_list)
+            question_starter_list.extend([''] * len(temp_sentence_list))
 
-        questions = Document.questions_from_sentlist(sentence_list)
-
+        questions, question_starters = Document.questions_from_sentlist(sentence_list, question_starter_list)
         if not questions:
             print('Failed to score sentences')
             return terms, definitions
 
-        temp_terms = [ question.sentence.return_string() for question in questions]
+        temp_terms = [ q_starter+question.sentence.return_string() for question, q_starter in zip(questions, question_starters)]
         temp_definitions = [str(question.answer.content) for question in questions]
 
         # extend the question list
@@ -237,7 +241,7 @@ class Document:
         
         return question_starter
 
-    def questions_from_sentlist(sentence_list):
+    def questions_from_sentlist(sentence_list, question_starter_list):
         """
         Creates questions from a list of sentences
 
@@ -246,20 +250,22 @@ class Document:
 
         Returns:
             questions ([Question]): list of question objects
+            question_starters (list): list of strings that are used to preface the question
         """
         try:
             sent_scores = requests.post('http://localhost:8080/' + 'get_sent_scores', json={"sentences": sentence_list}).json()
         except:
-            return None
+            return None, None
         sentenceObjList = Sentence.init_sentences(sentence_list)
-        sentenceObjList = Sentence.update_subject(sentenceObjList)
+        #sentenceObjList = Sentence.update_subject(sentenceObjList)
 
         # sorts sentences by score and takes the first few sentences and creates fib questions
         num_questions = int(len(sentence_list)*0.3)
-        ranked_sentences = sorted(((sent_scores[str(i)], s) for i,s in enumerate(sentenceObjList)), reverse=True, key=lambda s: s[0])
-        questions = [Question(sent[1]) for sent in ranked_sentences[:num_questions] if Question.is_question(sent[1])]
+        ranked_sentences = sorted(((sent_scores[str(i)], s, question_starter_list[i]) for i,s in enumerate(sentenceObjList)), reverse=True, key=lambda s: s[0])
+        questions = [ ( Question(sent[1]), sent[2] ) for sent in ranked_sentences[:num_questions] if Question.is_question(sent[1])]
+        questions, question_starters = zip(*questions)
 
-        return questions
+        return questions, question_starters
 
 
     def print(self):

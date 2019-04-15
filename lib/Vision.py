@@ -80,7 +80,7 @@ class Vision():
         # initializes client and sends request to Vision API
         client = vision.ImageAnnotatorClient()
         image = types.Image(content=self.process_img_bytes)
-        response = client.document_text_detection(image=image)
+        response = client.document_text_detection(image=image, image_context={'language_hints' : ['en']})
 
         # THROW ERROR FLASK here
         if response.error.code != 0:
