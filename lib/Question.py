@@ -26,7 +26,8 @@ class Question:
         # sorts the words by highest salience first
         words = sorted(self.sentence.words, key=lambda x: x.salience, reverse=True)
         # keep only the words that are entities
-        words = [word for word in words if word.entity]
+        words = [word for word in words if word.entity and len(str(word)) > 1]
+
         answer = words[0]
         # replace the word being used as answer with a blank
         for i, word in enumerate(self.sentence.words):
@@ -47,10 +48,13 @@ class Question:
         pos_list = [word.part_of_speech for word in sentence.words]
         max_salience = max([word.salience for word in sentence.words])
 
+        words = sorted(sentence.words, key=lambda x: x.salience, reverse=True)
+        word_answers = [word for word in words if word.entity and len(str(word)) > 1]
+
 
         # gets all the words in the sentence as a list of strings
         words = sentence.return_string().split()
-        if len(entities) == 0 or len(sentence.words) <= 1 or max_salience < 0.1 or ('VERB' not in pos_list):
+        if len(entities) == 0 or len(sentence.words) <= 1 or max_salience < 0.1 or ('VERB' not in pos_list) or not word_answers:
             return False
 
         return True

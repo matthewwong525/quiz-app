@@ -188,24 +188,27 @@ class Document:
             if node == self.root_node:
                 continue
 
-            # Gets the string that prefaces that question
             question_starter = ''
 
-            # checks if prev node is not a sibling 
-            # Creates a property question based on subtopic here
-            if prev_node is node.parent and len(self.root_node.descendants) > len(self.annotation_list):
+            # checks if tree has valid document structure
+            num_first_layer = len(self.root_node.children)
+            num_below_first_layer = len(self.root_node.descendants) - len(self.root_node.children)
+            if (len(self.root_node.descendants) > len(self.annotation_list) and num_below_first_layer > num_first_layer * 2):
                 question_starter = self.get_question_starter(node=node)
-                node_layer = [sibling for sibling in node.siblings]
-                node_layer.append(node)
+                # checks if prev node is not a sibling 
+                # Creates a property question based on subtopic here
+                if len(node.ancestors) > 1 and prev_node is node.parent:
+                    node_layer = [sibling for sibling in node.siblings]
+                    node_layer.append(node)
 
-                # if there is only one property, skip question
-                if len(node_layer) <= 1:
-                    continue
+                    # if there is only one property, skip question
+                    if len(node_layer) <= 1:
+                        continue
 
-                temp_term = "%sWhat are the %s properties?" % (question_starter, len(node_layer))
-                temp_definition = '\n'.join([ "%s. " % (i+1) + sibling.text for i, sibling in enumerate(node_layer) ])
-                terms.append(temp_term)
-                definitions.append(temp_definition)
+                    temp_term = "%sWhat are the %s properties?" % (question_starter, len(node_layer))
+                    temp_definition = '\n'.join([ "%s. " % (i+1) + sibling.text for i, sibling in enumerate(node_layer) ])
+                    terms.append(temp_term)
+                    definitions.append(temp_definition)
 
             prev_node = node
             
@@ -263,6 +266,8 @@ class Document:
         num_questions = int(len(sentence_list)*0.3)
         ranked_sentences = sorted(((sent_scores[str(i)], s, question_starter_list[i]) for i,s in enumerate(sentenceObjList)), reverse=True, key=lambda s: s[0])
         questions = [ ( Question(sent[1]), sent[2] ) for sent in ranked_sentences[:num_questions] if Question.is_question(sent[1])]
+        if not questions:
+            return None, None
         questions, question_starters = zip(*questions)
 
         return questions, question_starters
