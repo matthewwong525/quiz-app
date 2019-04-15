@@ -193,7 +193,7 @@ class Document:
             # checks if tree has valid document structure
             num_first_layer = len(self.root_node.children)
             num_below_first_layer = len(self.root_node.descendants) - len(self.root_node.children)
-            if (len(self.root_node.descendants) > len(self.annotation_list) and num_below_first_layer > num_first_layer * 2):
+            if (len(self.root_node.descendants) > len(self.annotation_list) and num_below_first_layer > num_first_layer):
                 question_starter = self.get_question_starter(node=node)
                 # checks if prev node is not a sibling 
                 # Creates a property question based on subtopic here
