@@ -15,14 +15,19 @@
 # [START gae_flex_quickstart]
 import logging
 import os
+import json
 from lib.Vision import Vision
 from lib.Document import Document
 from lib.Paragraph import ParagraphHelper
 from lib.Quizlet import Quizlet
 from lib.scripts import text_summarize
 import nltk
+import base64
 
 from flask import Flask, render_template, request, flash, redirect, Response, jsonify
+from google.cloud import bigquery
+from datetime import datetime
+from anytree.exporter import DictExporter
 
 template_dir = './frontend'
 app = Flask(__name__, template_folder=template_dir)
@@ -30,13 +35,31 @@ app = Flask(__name__, template_folder=template_dir)
 ALLOWED_EXTENSIONS = set(['pdf', 'png', 'jpg', 'jpeg'])
 
 WORD_EMBEDDINGS = None
+bq_client = None
 
-def init_model():
+def init_server():
+    # intialize model for extractive summary
     global WORD_EMBEDDINGS
     nltk.download('punkt') # one time execution
     nltk.download('stopwords')
     WORD_EMBEDDINGS = text_summarize.extract_word_vec()
-    print('initialized model')
+
+    # intialize bigquery client
+    global bq_client
+    bq_client = bigquery.Client()
+
+    print('initialized server')
+
+def log_upload_req(json_rows):
+    dataset_id = 'logs'
+    table_id = 'upload_post_requests'
+    table_ref = bq_client.dataset(dataset_id).table(table_id)
+    table = bq_client.get_table(table_ref)
+
+    errors = bq_client.insert_rows_json(table, json_rows, ignore_unknown_values=True)
+
+    if errors:
+        print("Big Query Error: %s" % errors)
 
 @app.route('/get_sent_scores', methods=['POST'])
 def get_sent_scores():
@@ -81,6 +104,7 @@ def upload_file():
     vis = Vision(file)
     if not hasattr(vis, 'word_list'):
         return '%s.%s' % (vis.file_name, vis.file_ext) + ' has Bad Image Data', 400
+
     p = vis.get_paragraph_helper()
     paragraph_list = p.get_paragraph_list()
     d = Document(paragraph_list, p.avg_symbol_width, p.avg_symbol_height)
@@ -88,6 +112,29 @@ def upload_file():
 
     if not (terms and definitions):
         return 'No questions extracted from ' + '%s.%s' % (vis.file_name, vis.file_ext), 400
+
+    bq_row_obj = {
+        'filename': file.filename,
+        'ext': file.filename.rsplit('.', 1)[1].lower(),
+        'paragraph_list': [paragraph['text'] for paragraph in paragraph_list],
+        'doc_struct': json.dumps(DictExporter().export(d.root_node)),
+        'doc_border': {
+            'top_left': { 'x': float(vis.doc_border[0][0]), 'y': float(vis.doc_border[0][1]) },
+            'top_right': { 'x': float(vis.doc_border[1][0]), 'y': float(vis.doc_border[1][1]) },
+            'bot_left': { 'x': float(vis.doc_border[3][0]), 'y': float(vis.doc_border[3][1]) },
+            'bot_right': { 'x': float(vis.doc_border[2][0]), 'y': float(vis.doc_border[2][1]) }
+        } if vis.doc_border else None,
+        'img_scale': vis.image_scale,
+        'corrected_perspective': vis.is_corrected_perspective,
+        'terms': terms,
+        'definitions': definitions,
+        'time_received': datetime.timestamp(datetime.now()),
+        'orig_img_bytes': base64.b64encode(vis.orig_img_bytes).decode("utf-8"),
+        'processed_img_bytes': base64.b64encode(vis.process_img_bytes).decode("utf-8"),
+        'ip_address': request.environ['REMOTE_ADDR']
+    }
+    #base64.b64decode() to decode
+    log_upload_req([bq_row_obj])
 
     return jsonify({'terms': terms, 'definitions': definitions})
 
@@ -116,7 +163,7 @@ def server_error(e):
 
 
 if __name__ == '__main__':
-    init_model()
+    init_server()
     # This is used when running locally. Gunicorn is used to run the
     # application on Google App Engine. See entrypoint in app.yaml.
     app.run(host='127.0.0.1', port=8080, debug=True)

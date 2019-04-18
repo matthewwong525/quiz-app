@@ -64,7 +64,8 @@ class Vision():
         # image pre-processing done here
         self.image_scale = 1
         self.doc_border = self.get_doc_border()
-        if self.all_words_in_doc():
+        self.is_corrected_perspective = self.all_words_in_doc()
+        if self.is_corrected_perspective:
             self.correct_perspective()
         self.deskew()
 
