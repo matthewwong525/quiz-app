@@ -51,12 +51,11 @@ class ParagraphHelper:
 
         # creates paragraph object
         width = 0
-
+        most_left_word = min(flattened_paragraph, key=lambda x: x['bounding_box'].vertices[0].x)
         if len(flattened_paragraph) == 1:
             scd_most_left = flattened_paragraph[0]['bounding_box'].vertices[0].x
         else:
             # gets second most left word and adds width of first most left word so it can filter out the first bullet point extra spacing
-            most_left_word = min(flattened_paragraph, key=lambda x: x['bounding_box'].vertices[0].x)
             scd_left_word = min([word for word in flattened_paragraph if most_left_word != word], key=lambda x: x['bounding_box'].vertices[0].x)
             scd_most_left = scd_left_word['bounding_box'].vertices[0].x
             # makes sure that the left most word is not under to the second left most word
@@ -64,7 +63,7 @@ class ParagraphHelper:
             if abs(most_left_word['bounding_box'].vertices[0].x - scd_most_left) > self.avg_symbol_width * 2:
                 width, height = ParagraphHelper.get_width_height(most_left_word['bounding_box'])
 
-
+        most_left = most_left_word['bounding_box'].vertices[0].x
         most_right = max([word['bounding_box'].vertices[2].x for word in flattened_paragraph])
         most_bot = max([word['bounding_box'].vertices[2].y for word in flattened_paragraph])
         most_top = min([word['bounding_box'].vertices[0].y for word in flattened_paragraph])
@@ -73,7 +72,7 @@ class ParagraphHelper:
         paragraph = {
             'text' : ''.join([word['text'] for word in flattened_paragraph]),
             'bounding_box': {
-                "top_left": {'x': scd_most_left - width, 'y': most_top},
+                "top_left": {'x': scd_most_left - width if len(most_left_word['text']) <= 3 else most_left, 'y': most_top},
                 "bot_right": {'x': most_right, 'y': most_bot}
             }
         }

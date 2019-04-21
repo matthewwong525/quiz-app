@@ -231,6 +231,25 @@ class Vision():
             rotated_image.save(output, format=self.file_ext)
             self.process_img_bytes = output.getvalue()
 
+    def update_processed_img(self, paragraph_list):
+        """
+        Adds red boxes around the paragraphs in the processed images
+        """
+        nparr = np.frombuffer(self.process_img_bytes, np.uint8)
+        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+        for paragraph in paragraph_list:
+            top_left = (paragraph['bounding_box']['top_left']['x'], paragraph['bounding_box']['top_left']['y'])
+            bot_right = (paragraph['bounding_box']['bot_right']['x'], paragraph['bounding_box']['bot_right']['y'])
+            persp_pic = cv2.rectangle(image, top_left, bot_right, (0,255,0), 2)
+
+        persp_pic = cv2.cvtColor(persp_pic,cv2.COLOR_BGR2RGB)
+
+        persp_img = Image.fromarray(persp_pic, 'RGB')
+        with io.BytesIO() as output:
+            persp_img.save(output, format=self.file_ext)
+            self.process_img_bytes = output.getvalue()
+
 
 
 if __name__ == "__main__":

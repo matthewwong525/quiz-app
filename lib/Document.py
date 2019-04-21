@@ -44,12 +44,12 @@ class Document:
 
         # loops through layers until there are no more 
         while paragraph_list:
-            top_left_idx = Document.find_top_left(paragraph_list)
-            top_left_x_val = paragraph_list[top_left_idx]['bounding_box']['top_left']['x']
+            top_left_idx = Document.find_top_left(paragraph_list, prev_top_left_x_val)
+            top_left_x_val = paragraph_list[top_left_idx]['bounding_box']['top_left']['x'] if top_left_idx is not None else 0
 
             # If next top left value is extremely far away from the previous top left value, 
             # break loop and set remaining values as annotations
-            if prev_top_left_x_val != 0 and top_left_x_val > prev_top_left_x_val + (20*self.symbol_width):
+            if top_left_idx is None or (prev_top_left_x_val != 0 and top_left_x_val > prev_top_left_x_val + (20*self.symbol_width)):
                 self.annotation_list.extend(paragraph_list)
                 break
 
@@ -59,7 +59,6 @@ class Document:
                 parent_node_idx_list = self.determine_parent_node(layer_list, prev_layer_list)
                 new_parent_nodes = []
                 for i, paragraph in enumerate(layer_list):
-                    # TODO: seperate this section to init questions section
                     child_node = Node("layer: %s, child_num: %s" % (layer_num, i), parent=parent_nodes[parent_node_idx_list[i]], text=paragraph['text'])
                     new_parent_nodes.append(child_node)
 
@@ -73,7 +72,7 @@ class Document:
                 break
 
     @staticmethod
-    def find_top_left(paragraph_list):
+    def find_top_left(paragraph_list, prev_top_left_x_val):
         """
         Top left node is defined as the left most paragraph within the first 5
         paragraphs
@@ -88,8 +87,13 @@ class Document:
             * Think of a way to make this better because might have to distinguish
               between a diagram and text files.
         """
+        paragraph_list = [paragraph for paragraph in paragraph_list if paragraph['bounding_box']['top_left']['x'] >= prev_top_left_x_val ]
         x_val_list = [ paragraph['bounding_box']['top_left']['x'] for paragraph in paragraph_list[:5]]
+        if not x_val_list:
+            return None
+
         min_x = min(x_val_list)
+        top_left_val = x_val_list.index(min_x)
         return x_val_list.index(min_x)
 
     def find_nodes_in_same_layer(self, paragraph_list, top_left_x_val):
@@ -231,10 +235,10 @@ class Document:
         temp_definitions = [str(question.answer.content) for question in questions]
 
         # extend the question list
-        terms.extend(temp_terms)
-        definitions.extend(temp_definitions)
+        temp_terms.extend(terms)
+        temp_definitions.extend(definitions)
 
-        return terms, definitions
+        return temp_terms, temp_definitions
 
     def get_question_starter(self, node=None, text=''):
         question_starter = ''

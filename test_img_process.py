@@ -53,7 +53,6 @@ def test_case(path):
         vis = Vision(image_file, True)
 
     results['orig_pic'] = vis.orig_img_bytes
-    results['process_pic'] = vis.process_img_bytes
 
     print('--------------------------- BEGIN TEST FOR %s' % (file_name+file_ext))
 
@@ -70,6 +69,9 @@ def test_case(path):
 
     p = vis.get_paragraph_helper()
     paragraph_list = p.get_paragraph_list()
+    vis.update_processed_img(paragraph_list)
+
+    results['process_pic'] = vis.process_img_bytes
 
     tests[1] = True
 
