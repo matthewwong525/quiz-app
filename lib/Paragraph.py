@@ -79,20 +79,32 @@ class ParagraphHelper:
 
         return paragraph
 
-    @staticmethod
-    def check_paragraph_split(paragraph):
+    def check_paragraph_split(self, paragraph):
         """
         Checks if the paragraph should be split and returns a list of 
         paragraphs.
 
         """
         split_idxs = []
+        prev_line = None
         for idx, line in enumerate(paragraph):
+            if not prev_line:
+                prev_line = line
+                continue
+            line_text = ' '.join([word['text'] for word in line])
             first_word = line[0]['text']
             # check if lines after first line have a point form character at the front
-            if idx is 0 or not re.match('(^((\w{1,2}(\.|\)))+?)|^-|^•|^→|^o|^·|^\.|^O|^o|^0|^>|^✓)(\s|)+$', first_word):
+            is_next_line = ( re.match(r'^(\s*(((\w{1,2}\s*(\.|\)))+?)|[^\w\ \(\$\'\"]|[^aAiI1-9](\s)+)(\s)*)', line_text) or   # checks if there is a bullet point
+                (not re.match(r'\.\s*$', prev_line[-1]['text']) and re.match(r'^\s*[A-Z]', first_word))      # checks if prev_line has a . AND next line is capitalized
+                and     
+                (prev_line[-1]['bounding_box'].vertices[2].x * self.avg_symbol_width * 15 > line[-1]['bounding_box'].vertices[2].x) ) #checks if prev_line is much shorter than next line
+
+
+            prev_line = line
+            if not is_next_line:
                 continue
             split_idxs.append(idx)
+            
 
         if split_idxs == []:
             return [ paragraph ]
@@ -128,40 +140,42 @@ class ParagraphHelper:
             return True
         return False
 
-    def is_next_line(self, line, curr_word, temp_paragraph):
+    def is_next_line(self, prev_line, line, temp_paragraph):
         """
         Checks if the current word is on the next line of the previous line
         """
         # create the bounds that can represent the next line
         # if its the first line, check for an indent
 
-        # may not always work fix later.
-        if len(line) == 1:
-            return False    
-        first_word = temp_paragraph[0][0] if len(temp_paragraph) > 1 and len(temp_paragraph[0]) > 1  else line[0]
-        second_word = temp_paragraph[0][1] if len(temp_paragraph) > 1 and len(temp_paragraph[0]) > 1 else line[1]
-        is_first_word_indent = re.match('(^((\w{1,2}(\.|\)))+?)|^-|^•|^→|^o|^·|^\.|^O|^o|^0|^>|^✓)(\s|)+$', first_word['text'])
+        if len(prev_line) == 1:
+            return False
+
+        first_word = temp_paragraph[0][0] if len(temp_paragraph) > 1 and len(temp_paragraph[0]) > 1  else prev_line[0]
+        second_word = temp_paragraph[0][1] if len(temp_paragraph) > 1 and len(temp_paragraph[0]) > 1 else prev_line[1]
+        line_text = ' '.join([word['text'] for word in prev_line])
+        is_first_word_indent = re.match(r'^(\s*(((\w{1,2}\s*(\.|\)))+?)|[^\w\ \(\$\'\"]|[^aAiI1-9](\s)+)(\s)*)', line_text)
 
         next_word_x = second_word if is_first_word_indent else first_word
-        next_word_y = line[1] if is_first_word_indent else line[0]
+        next_word_y = prev_line[1] if is_first_word_indent else prev_line[0]
 
         # previously handled indents not anymore. ON TODO list.
         # Not handled because if it falsely detects an indented point, it can ruin the paragraph formations
-        lower_x_lim = next_word_x['bounding_box'].vertices[3].x - (self.avg_symbol_width if len(temp_paragraph) != 1 or is_first_word_indent else self.avg_symbol_width)
-        upper_x_lim = next_word_x['bounding_box'].vertices[3].x + self.avg_symbol_width * 3
-        upper_y_lim = next_word_y['bounding_box'].vertices[3].y 
+        lower_x_lim = next_word_x['bounding_box'].vertices[3].x - (self.avg_symbol_width * 2 if len(temp_paragraph) != 1 or is_first_word_indent else self.avg_symbol_width * 2)
+        upper_x_lim = next_word_x['bounding_box'].vertices[3].x + self.avg_symbol_width * 5
+        upper_y_lim = next_word_y['bounding_box'].vertices[3].y - self.avg_symbol_height
         lower_y_lim = next_word_y['bounding_box'].vertices[3].y + self.avg_symbol_height * 0.6
 
         """
         print("%s %s %s %s" % (lower_x_lim, upper_x_lim, lower_y_lim, upper_y_lim) )
-        print(curr_word['bounding_box'].vertices[0])
-        print(curr_word['text'])
-        print((lower_x_lim <= curr_word['bounding_box'].vertices[0].x <= upper_x_lim) and (upper_y_lim <= curr_word['bounding_box'].vertices[0].y <= lower_y_lim))
+        print(line[0]['bounding_box'].vertices[0])
+        print(line[0]['text'])
+        print((lower_x_lim <= line[0]['bounding_box'].vertices[0].x <= upper_x_lim) and (upper_y_lim <= line[0]['bounding_box'].vertices[0].y <= lower_y_lim))
         print('is first word indented: %s' % is_first_word_indent)
         print('')
         """
         
-        if (lower_x_lim <= curr_word['bounding_box'].vertices[0].x <= upper_x_lim) and (upper_y_lim <= curr_word['bounding_box'].vertices[0].y <= lower_y_lim):
+        if (lower_x_lim <= line[0]['bounding_box'].vertices[0].x <= upper_x_lim) and (upper_y_lim <= line[0]['bounding_box'].vertices[0].y <= lower_y_lim):
+            line[0]['text'] = ' ' + line[0]['text']
             return True
         return False
         
@@ -208,6 +222,28 @@ class ParagraphHelper:
 
         self.word_list = word_list
 
+    def get_line_list(self):
+        temp_word_list = list(self.word_list)
+        line_list = []
+        line = []
+
+        for idx, word in enumerate(temp_word_list):
+            if line == []:
+                line.append(word)
+                continue
+
+            # condition to check if curr word is part of the paragraph
+            if self.is_adjacent_word(line[-1], word):
+                line.append(word)
+            else:
+                line_list.append(line)
+                line = [word]
+
+            # checks if it is the last iteration
+            if idx == len(temp_word_list)-1:
+                line_list.append(line)
+
+        return line_list
 
     def get_paragraph_list(self):
         """
@@ -223,44 +259,33 @@ class ParagraphHelper:
         """
         temp_word_list = list(self.word_list)
         paragraph_list = []
-        line = []
+        line_list = self.get_line_list()
         temp_paragraph = []
+        prev_line = None
 
-        for idx, word in enumerate(temp_word_list):
-            # checks if first word has been reset
-            if line == []:
-                line.append(word)
+        # grouping lines together into paragraphs
+        for idx, line in enumerate(line_list):
+            if not prev_line:
+                temp_paragraph.append(line)
+                prev_line = line
                 continue
-
-            # condition to check if curr word is part of the paragraph
-            if self.is_adjacent_word(line[-1], word):
-                line.append(word)
-            
-            # elif condition to check if the next line is part of the same word
-            # also takes into account of indents
-            # TODO: COULD PRODUCE ERROR HERE BECAUSE OF THE LIST CUTTING
-            elif self.is_next_line(line, word, temp_paragraph):
-                line[-1]['text'] += ' '
+            if self.is_next_line(prev_line, line, temp_paragraph):
                 temp_paragraph.append(line)
-                line = [word]
             else:
-                temp_paragraph.append(line)
                 # check if temp_paragraph should be split due to point forms
-                temp_paragraphs = ParagraphHelper.check_paragraph_split(temp_paragraph)
+                temp_paragraphs = self.check_paragraph_split(temp_paragraph)
                 # creates a paragraph object from paragraph
                 paragraphs = [ self.get_paragraph_obj(paragraph) for paragraph in temp_paragraphs ]
-
                 # converts paragraph into proper paragraph list format ('text', 'bounded_box')
                 paragraph_list.extend(paragraphs)
-                line = [word]
-                temp_paragraph = []
+                temp_paragraph = [line]
 
             # checks if it is the last iteration
-            if idx == len(temp_word_list)-1:
-                temp_paragraph.append(line)
-
-                paragraph = self.get_paragraph_obj(temp_paragraph)
-                paragraph_list.append(paragraph)
+            if idx == len(line_list)-1:
+                temp_paragraphs = self.check_paragraph_split(temp_paragraph)
+                paragraphs = [ self.get_paragraph_obj(paragraph) for paragraph in temp_paragraphs ]
+                paragraph_list.extend(paragraphs)
+            prev_line = line
 
         return paragraph_list
              
