@@ -1,4 +1,5 @@
 from google.cloud import vision
+from lib.Word import Word
 import re
 
 class ParagraphHelper:
@@ -25,6 +26,13 @@ class ParagraphHelper:
             # helper function which is an alternate way to initalize the ParagraphHelper Class
             self.seperate_to_words(doc)
 
+        # Performing NLP here
+        text = ' '.join([word['text'].replace(' ', '') for word in self.word_list])
+        self.syntax_list = Word.analyze_text_syntax(text)
+        self.entity_list = Word.analyze_text_entities(text)
+        assert(self.word_list == self.syntax_list)
+        assert(self.word_list == self.entity_list)
+
     @staticmethod
     def get_width_height(bounding_box):
         """
@@ -46,8 +54,9 @@ class ParagraphHelper:
         Returns:
             paragraph (obj): An object denoting the paragraph: { 'text':.. , 'bounding_box': ...}
         """
+
         # flattens all the lines into a list of word
-        flattened_paragraph = [ word for line in paragraph_list for word in line ]
+        flattened_paragraph = [ word for line in paragraph_list for word in line['word'] ]
 
         # creates paragraph object
         width = 0
@@ -85,6 +94,7 @@ class ParagraphHelper:
         paragraphs.
 
         """
+        paragraph = [line['word'] for line in paragraph]
         split_idxs = []
         prev_line = None
         for idx, line in enumerate(paragraph):
@@ -94,14 +104,14 @@ class ParagraphHelper:
             line_text = ' '.join([word['text'] for word in line])
             first_word = line[0]['text']
             # check if lines after first line have a point form character at the front
-            is_next_line = ( re.match(r'^(\s*(((\w{1,2}\s*(\.|\)))+?)|[^\w\ \(\$\'\"]|[^aAiI1-9](\s)+)(\s)*)', line_text) or   # checks if there is a bullet point
+            is_next_paragraph = ( re.match(r'^(\s*(((\w{1,2}\s*(\.|\)))+?)|[^\w\ \(\$\'\"]|[^aAiI1-9](\s)+)(\s)*)', line_text) or   # checks if there is a bullet point
                 (not re.match(r'\.\s*$', prev_line[-1]['text']) and re.match(r'^\s*[A-Z]', first_word))      # checks if prev_line has a . AND next line is capitalized
                 and     
                 (prev_line[-1]['bounding_box'].vertices[2].x * self.avg_symbol_width * 15 > line[-1]['bounding_box'].vertices[2].x) ) #checks if prev_line is much shorter than next line
 
 
             prev_line = line
-            if not is_next_line:
+            if not is_next_paragraph:
                 continue
             split_idxs.append(idx)
             
@@ -147,6 +157,9 @@ class ParagraphHelper:
         # create the bounds that can represent the next line
         # if its the first line, check for an indent
 
+        prev_line = prev_line['word']
+        line = line['word']
+        temp_paragraph = [temp_line['word'] for temp_line in temp_paragraph]
         if len(prev_line) == 1:
             return False
 
@@ -223,24 +236,25 @@ class ParagraphHelper:
         self.word_list = word_list
 
     def get_line_list(self):
-        temp_word_list = list(self.word_list)
         line_list = []
         line = []
 
-        for idx, word in enumerate(temp_word_list):
+        for idx, (word, entity, syntax) in enumerate(zip(self.word_list, self.entity_list, self.syntax_list)):
+            word_obj = { 'word': word, 'entity': entity, 'syntax': syntax}
             if line == []:
-                line.append(word)
+                line.append(word_obj)
                 continue
 
             # condition to check if curr word is part of the paragraph
             if self.is_adjacent_word(line[-1], word):
-                line.append(word)
+                line.append(word_obj)
             else:
                 line_list.append(line)
-                line = [word]
+
+                line = [word_obj]
 
             # checks if it is the last iteration
-            if idx == len(temp_word_list)-1:
+            if idx == len(self.word_list)-1:
                 line_list.append(line)
 
         return line_list
@@ -257,9 +271,8 @@ class ParagraphHelper:
               I am assuming the order of the words in the document work in a particular way
             * So I am assuming lines contains at least 2 words and that iS NOT the right assumption
         """
-        temp_word_list = list(self.word_list)
         paragraph_list = []
-        line_list = self.get_line_list()
+        line_lis, entity_line_list = self.get_line_list()
         temp_paragraph = []
         prev_line = None
 

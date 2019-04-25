@@ -138,6 +138,11 @@ class Sentence:
         return sentence_obj_list
 
 
+    def is_title(self):
+        pos_list = [word.part_of_speech for word in self.words]
+        return 'VERB' not in pos_list
+
+
 
 if __name__ == "__main__":
     test = Sentence(u'the Golden Gate is in Bell High School')

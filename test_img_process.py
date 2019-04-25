@@ -53,6 +53,7 @@ def test_case(path):
         vis = Vision(image_file, True)
 
     results['orig_pic'] = vis.orig_img_bytes
+    results['process_pic'] = vis.process_img_bytes
 
     print('--------------------------- BEGIN TEST FOR %s' % (file_name+file_ext))
 
@@ -125,7 +126,7 @@ if __name__ == "__main__":
     mypath = 'test_imgs/'
     files = []
 
-    ignore_dirs = ['processed', 'not_working', 'test']
+    ignore_dirs = ['processed', 'not_working', 'working']
 
     for (dirpath, dirnames, filenames) in walk(mypath):
         if dirpath.replace(mypath, '').split('/')[0] not in ignore_dirs:
