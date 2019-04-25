@@ -30,8 +30,8 @@ class ParagraphHelper:
         text = ' '.join([word['text'].replace(' ', '') for word in self.word_list])
         self.syntax_list = Word.analyze_text_syntax(text)
         self.entity_list = Word.analyze_text_entities(text)
-        assert(self.word_list == self.syntax_list)
-        assert(self.word_list == self.entity_list)
+        assert(len(self.word_list) == len(self.syntax_list))
+        assert(len(self.word_list) == len(self.entity_list))
 
     @staticmethod
     def get_width_height(bounding_box):
@@ -56,34 +56,37 @@ class ParagraphHelper:
         """
 
         # flattens all the lines into a list of word
-        flattened_paragraph = [ word for line in paragraph_list for word in line['word'] ]
+        flattened_paragraph = [ word for line in paragraph_list for word in line ]
 
         # creates paragraph object
         width = 0
-        most_left_word = min(flattened_paragraph, key=lambda x: x['bounding_box'].vertices[0].x)
+        most_left_word = min(flattened_paragraph, key=lambda x: x['word']['bounding_box'].vertices[0].x)
         if len(flattened_paragraph) == 1:
-            scd_most_left = flattened_paragraph[0]['bounding_box'].vertices[0].x
+            scd_most_left = flattened_paragraph[0]['word']['bounding_box'].vertices[0].x
         else:
             # gets second most left word and adds width of first most left word so it can filter out the first bullet point extra spacing
-            scd_left_word = min([word for word in flattened_paragraph if most_left_word != word], key=lambda x: x['bounding_box'].vertices[0].x)
-            scd_most_left = scd_left_word['bounding_box'].vertices[0].x
+            scd_left_word = min([word for word in flattened_paragraph if most_left_word != word], key=lambda x: x['word']['bounding_box'].vertices[0].x)
+            scd_most_left = scd_left_word['word']['bounding_box'].vertices[0].x
             # makes sure that the left most word is not under to the second left most word
             # so it does not unnecessarily add a width
-            if abs(most_left_word['bounding_box'].vertices[0].x - scd_most_left) > self.avg_symbol_width * 2:
-                width, height = ParagraphHelper.get_width_height(most_left_word['bounding_box'])
+            if abs(most_left_word['word']['bounding_box'].vertices[0].x - scd_most_left) > self.avg_symbol_width * 2:
+                width, height = ParagraphHelper.get_width_height(most_left_word['word']['bounding_box'])
 
-        most_left = most_left_word['bounding_box'].vertices[0].x
-        most_right = max([word['bounding_box'].vertices[2].x for word in flattened_paragraph])
-        most_bot = max([word['bounding_box'].vertices[2].y for word in flattened_paragraph])
-        most_top = min([word['bounding_box'].vertices[0].y for word in flattened_paragraph])
+        most_left = most_left_word['word']['bounding_box'].vertices[0].x
+        most_right = max([word['word']['bounding_box'].vertices[2].x for word in flattened_paragraph])
+        most_bot = max([word['word']['bounding_box'].vertices[2].y for word in flattened_paragraph])
+        most_top = min([word['word']['bounding_box'].vertices[0].y for word in flattened_paragraph])
         
 
         paragraph = {
-            'text' : ''.join([word['text'] for word in flattened_paragraph]),
+            'text' : ''.join([word['word']['text'] for word in flattened_paragraph]),
             'bounding_box': {
-                "top_left": {'x': scd_most_left - width if len(most_left_word['text']) <= 3 else most_left, 'y': most_top},
+                "top_left": {'x': scd_most_left - width if len(most_left_word['word']['text']) <= 3 else most_left, 'y': most_top},
                 "bot_right": {'x': most_right, 'y': most_bot}
-            }
+            },
+            'word_list': [ word['word'] for word in flattened_paragraph ],
+            'entity_list': [ word['entity'] for word in flattened_paragraph ],
+            'syntax_list': [ word['syntax'] for word in flattened_paragraph ]
         }
 
         return paragraph
@@ -94,20 +97,19 @@ class ParagraphHelper:
         paragraphs.
 
         """
-        paragraph = [line['word'] for line in paragraph]
         split_idxs = []
         prev_line = None
         for idx, line in enumerate(paragraph):
             if not prev_line:
                 prev_line = line
                 continue
-            line_text = ' '.join([word['text'] for word in line])
-            first_word = line[0]['text']
+            line_text = ' '.join([word['word']['text'] for word in line])
+            first_word = line[0]['word']['text']
             # check if lines after first line have a point form character at the front
             is_next_paragraph = ( re.match(r'^(\s*(((\w{1,2}\s*(\.|\)))+?)|[^\w\ \(\$\'\"]|[^aAiI1-9](\s)+)(\s)*)', line_text) or   # checks if there is a bullet point
-                (not re.match(r'\.\s*$', prev_line[-1]['text']) and re.match(r'^\s*[A-Z]', first_word))      # checks if prev_line has a . AND next line is capitalized
+                (not re.match(r'\.\s*$', prev_line[-1]['word']['text']) and re.match(r'^\s*[A-Z]', first_word) and not line[0]['entity'])      # checks if prev_line has a . AND next line is capitalized
                 and     
-                (prev_line[-1]['bounding_box'].vertices[2].x * self.avg_symbol_width * 15 > line[-1]['bounding_box'].vertices[2].x) ) #checks if prev_line is much shorter than next line
+                (prev_line[-1]['word']['bounding_box'].vertices[2].x * self.avg_symbol_width * 15 > line[-1]['word']['bounding_box'].vertices[2].x) ) #checks if prev_line is much shorter than next line
 
 
             prev_line = line
@@ -137,6 +139,7 @@ class ParagraphHelper:
         """
         Checks if the prev_word is adjacent to the currentw ord
         """
+
         lower_x_lim = (prev_word['bounding_box']).vertices[2].x - self.avg_symbol_height * 0.25
         upper_x_lim = (prev_word['bounding_box'].vertices[2].x + self.avg_symbol_width * 10)
         upper_y_lim = (prev_word['bounding_box'].vertices[2].y - self.avg_symbol_height * 1.5)
@@ -157,19 +160,19 @@ class ParagraphHelper:
         # create the bounds that can represent the next line
         # if its the first line, check for an indent
 
-        prev_line = prev_line['word']
-        line = line['word']
-        temp_paragraph = [temp_line['word'] for temp_line in temp_paragraph]
+        prev_line = prev_line
+        line = line
+        temp_paragraph = [temp_line for temp_line in temp_paragraph]
         if len(prev_line) == 1:
             return False
 
-        first_word = temp_paragraph[0][0] if len(temp_paragraph) > 1 and len(temp_paragraph[0]) > 1  else prev_line[0]
-        second_word = temp_paragraph[0][1] if len(temp_paragraph) > 1 and len(temp_paragraph[0]) > 1 else prev_line[1]
-        line_text = ' '.join([word['text'] for word in prev_line])
+        first_word = temp_paragraph[0][0]['word'] if len(temp_paragraph) > 1 and len(temp_paragraph[0]) > 1  else prev_line[0]['word']
+        second_word = temp_paragraph[0][1]['word'] if len(temp_paragraph) > 1 and len(temp_paragraph[0]) > 1 else prev_line[1]['word']
+        line_text = ' '.join([word['word']['text'] for word in prev_line])
         is_first_word_indent = re.match(r'^(\s*(((\w{1,2}\s*(\.|\)))+?)|[^\w\ \(\$\'\"]|[^aAiI1-9](\s)+)(\s)*)', line_text)
 
         next_word_x = second_word if is_first_word_indent else first_word
-        next_word_y = prev_line[1] if is_first_word_indent else prev_line[0]
+        next_word_y = prev_line[1]['word'] if is_first_word_indent else prev_line[0]['word']
 
         # previously handled indents not anymore. ON TODO list.
         # Not handled because if it falsely detects an indented point, it can ruin the paragraph formations
@@ -187,8 +190,7 @@ class ParagraphHelper:
         print('')
         """
         
-        if (lower_x_lim <= line[0]['bounding_box'].vertices[0].x <= upper_x_lim) and (upper_y_lim <= line[0]['bounding_box'].vertices[0].y <= lower_y_lim):
-            line[0]['text'] = ' ' + line[0]['text']
+        if (lower_x_lim <= line[0]['word']['bounding_box'].vertices[0].x <= upper_x_lim) and (upper_y_lim <= line[0]['word']['bounding_box'].vertices[0].y <= lower_y_lim):
             return True
         return False
         
@@ -246,7 +248,7 @@ class ParagraphHelper:
                 continue
 
             # condition to check if curr word is part of the paragraph
-            if self.is_adjacent_word(line[-1], word):
+            if self.is_adjacent_word(line[-1]['word'], word):
                 line.append(word_obj)
             else:
                 line_list.append(line)
@@ -272,7 +274,7 @@ class ParagraphHelper:
             * So I am assuming lines contains at least 2 words and that iS NOT the right assumption
         """
         paragraph_list = []
-        line_lis, entity_line_list = self.get_line_list()
+        line_list = self.get_line_list()
         temp_paragraph = []
         prev_line = None
 

@@ -8,7 +8,7 @@ import re
 class Sentence:
     __subject_carry_over = ['this', 'it', 'he', 'she', 'his', 'her']
 
-    def __init__(self, entity_obj, syntax_obj, sent):
+    def __init__(self, entity_list, syntax_list):
         """
         Initializes the sentence Object
 
@@ -18,6 +18,7 @@ class Sentence:
             sent (string): the string value of the text
 
         """
+
         self.subject = None
 
         if 'error' in entity_obj or 'error' in syntax_obj:
@@ -90,33 +91,6 @@ class Sentence:
         """
         return ' '.join([word.content for word in self.words])
 
-    @staticmethod
-    def update_subject(sentence_list):
-        """
-        Updates the sentence list based on the subject and carries over subjects
-        (Look into whether or not to remove this)
-
-        """
-        previous_subject = None
-        for sentence in sentence_list:
-            nouns = [word for word in sentence.words if word.part_of_speech == 'NOUN' or word.part_of_speech == 'PRON']
-            if not nouns:
-                sentence_list.remove(sentence)
-                continue
-            if nouns[0].content.lower() in Sentence.__subject_carry_over:
-                sentence.subject = previous_subject
-                if previous_subject:
-                    nouns[0].content = sentence.subject.content
-                else:
-                    sentence_list.remove(sentence)
-            else:
-                entities = [noun for noun in nouns if noun.entity]
-                if not entities:
-                    sentence_list.remove(sentence)
-                    continue
-                sentence.subject = entities[0]
-                previous_subject = sentence.subject
-        return sentence_list
 
     @staticmethod
     def init_sentences(sentence_list):

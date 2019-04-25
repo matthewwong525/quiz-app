@@ -59,7 +59,7 @@ class Document:
                 parent_node_idx_list = self.determine_parent_node(layer_list, prev_layer_list)
                 new_parent_nodes = []
                 for i, paragraph in enumerate(layer_list):
-                    child_node = Node("layer: %s, child_num: %s" % (layer_num, i), parent=parent_nodes[parent_node_idx_list[i]], text=paragraph['text'])
+                    child_node = Node("layer: %s, child_num: %s" % (layer_num, i), parent=parent_nodes[parent_node_idx_list[i]], text=paragraph['text'], word_list=paragraph['word_list'], entity_list=paragraph['entity_list'], syntax_list=paragraph['syntax_list'])
                     new_parent_nodes.append(child_node)
 
                 # Update parent nodes list:
@@ -217,9 +217,20 @@ class Document:
             prev_node = node
             
             # Appends 
-            temp_sentence_list =sent_tokenize(node.text)
-            sentence_list.extend(temp_sentence_list)
-            question_starter_list.extend([question_starter] * len(temp_sentence_list))
+            
+            temp_sentence_list = sent_tokenize(text)
+            temp_sent_obj_list = []
+            count = 0
+            # Splits the word, entity and syntax list based on `sent_tokenize`
+            for temp_sentence in temp_sentence_list:
+                for i, word in enumerate(node.word_list):
+                    if temp_sentence == ' '.join([word['text'] for word in node.word_list][count:i]):
+                        temp_sent_obj_list.append({'word': word[count:i], 'entity': node.entity_list[count:i], 'syntax': node.syntax_list[count:i]})
+                        count = i
+                        break
+            assert(len(temp_sentence_list) == len(temp_sent_obj_list))
+            sentence_list.extend(temp_sent_obj_list)
+            question_starter_list.extend([question_starter] * len(temp_sent_obj_list))
 
         for annotation in self.annotation_list:
             temp_sentence_list = sent_tokenize(annotation['text'])
@@ -239,6 +250,22 @@ class Document:
         temp_definitions.extend(definitions)
 
         return temp_terms, temp_definitions
+
+    def get_sentence_from_paragraph(word_list, entity_list, syntax_list):
+        paragraph_text = ' '.join([word['text'] for word in node.word_list])
+        sent_text_list = sent_tokenize(text)
+        sent_obj_list = []
+
+        # Splits the word, entity and syntax list based on `sent_tokenize`
+        for sent_text in sent_text_list:
+            for i, word in enumerate(node.word_list):
+                if sent_text == ' '.join([word['text'] for word in node.word_list][count:i]):
+                    sent_obj_list.append({'word': word[count:i], 'entity': node.entity_list[count:i], 'syntax': node.syntax_list[count:i]})
+                    count = i
+                    break
+        assert(len(temp_sentence_list) == len(temp_sent_obj_list))
+        sentence_list.extend(temp_sent_obj_list)
+        question_starter_list.extend([question_starter] * len(temp_sent_obj_list))
 
     def get_question_starter(self, node=None, text=''):
         question_starter = ''

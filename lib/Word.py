@@ -26,7 +26,7 @@ class Word:
         self.salience = 0
         self.wiki = None
 
-    def add_entity(self, entity):
+    def add_entity(self, entity, salience, content, wiki):
         """
         Adds the entitiy to the word object
 
@@ -35,11 +35,10 @@ class Word:
         """
         entity_type = ('UNKNOWN', 'PERSON', 'LOCATION', 'ORGANIZATION',
                        'EVENT', 'WORK_OF_ART', 'CONSUMER_GOOD', 'OTHER')
-        self.entity = entity['type']
-        self.salience = entity['salience']
-        self.content = entity['name']
-        if 'metadata' in entity and 'wikipedia_url' in entity['metadata']:
-            self.wiki = entity['metadata']['wikipedia_url']
+        self.entity = entity_type[entity]
+        self.salience = salience
+        self.content = content
+        self.wiki = wiki
 
     def print_word(self):
         print({"content": self.content, "part_of_speech": self.part_of_speech, "entity": self.entity,
@@ -100,24 +99,19 @@ class Word:
             else:
                 word_obj_list.append([Word(text=word)])
 
+        word_obj_list = Word.update_words(word_obj_list, client)
+
         return word_obj_list
 
 
     @staticmethod
-    def analyze_text_entities(text):
-        if isinstance(text, six.binary_type):
-            text = text.decode('utf-8')
-        client = language.LanguageServiceClient()
-
+    def update_words(word_obj_list, client):
         # Instantiates a plain text document.
         document = types.Document(
             content=text,
             type=enums.Document.Type.PLAIN_TEXT)
 
         entities = client.analyze_entities(document, encoding_type='UTF8').entities
-
-        text_list = text.split(' ')
-        entity_obj_list = [None] * len(text_list)
 
         for entity in entities:
             for mention in entity.mentions:
@@ -127,15 +121,15 @@ class Word:
                 ent_location = mention.text.begin_offset
                 ent_idx = len(text[:ent_location].split(' ')) - 2
                 for i, word in enumerate(entity.name.split(' ')): 
-                    if i+ent_idx >= len(entity_obj_list):
+                    if i+ent_idx >= len(word_obj_list):
                         break
-                    entity_obj_list[ent_idx+i] = { 
-                        'name': entity.name,
-                        'salience': entity.salience,
-                        'type': entity.type,
-                        'wikipedia_url': entity.metadata.wikipedia_url if hasattr(entity, 'metadata') and hasattr(entity.metadata, 'wikipedia_url') else None 
-                        } 
-        return entity_obj_list
+                    ent_type = entity.type
+                    ent_salience = entity.salience
+                    ent_content = entity.name
+                    ent_wiki = entity.metadata.wikipedia_url if hasattr(entity, 'metadata') and hasattr(entity.metadata, 'wikipedia_url') else None
+                    word_obj_list[ent_idx+i].add_entity(ent_type, ent_salience, ent_content, ent_wiki)
+
+        return word_obj_list
 
     def __str__(self):
         return self.content
