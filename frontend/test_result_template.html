@@ -43,8 +43,8 @@
                     {% for annotation in result.annotation_list %}
                     <tr>
                         <td>{{ annotation.text }}</td>
-                        <td>{{ annotation.bounding_box.top_left }}</td>
-                        <td>{{ annotation.bounding_box.bot_right }}</td>
+                        <td>{{ annotation.paragraph.bounding_box.top_left }}</td>
+                        <td>{{ annotation.paragraph.bounding_box.bot_right }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

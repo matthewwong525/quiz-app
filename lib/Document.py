@@ -6,7 +6,6 @@ from lib.Question import Question
 from lib.Quizlet import Quizlet
 import re
 import requests
-from nltk.tokenize import sent_tokenize
 from flask import request
 
 class Document:
@@ -50,7 +49,9 @@ class Document:
             # If next top left value is extremely far away from the previous top left value, 
             # break loop and set remaining values as annotations
             if top_left_idx is None or (prev_top_left_x_val != 0 and top_left_x_val > prev_top_left_x_val + (20*self.symbol_width)):
-                self.annotation_list.extend(paragraph_list)
+                for paragraph in paragraph_list:
+                    sentences = Sentence.get_sentences_from_paragraph(paragraph['word_list'], paragraph['entity_list'], paragraph['syntax_list'])
+                    self.annotation_list.append({ 'sentences': sentences, 'paragraph': paragraph, 'text': paragraph['text'] })
                 break
 
             # Add child nodes to the previous layer
@@ -59,7 +60,8 @@ class Document:
                 parent_node_idx_list = self.determine_parent_node(layer_list, prev_layer_list)
                 new_parent_nodes = []
                 for i, paragraph in enumerate(layer_list):
-                    child_node = Node("layer: %s, child_num: %s" % (layer_num, i), parent=parent_nodes[parent_node_idx_list[i]], text=paragraph['text'])
+                    sentences = Sentence.get_sentences_from_paragraph(paragraph['word_list'], paragraph['entity_list'], paragraph['syntax_list'])
+                    child_node = Node("layer: %s, child_num: %s" % (layer_num, i), parent=parent_nodes[parent_node_idx_list[i]], sentences=sentences, paragraph=paragraph, text=paragraph['text'])
                     new_parent_nodes.append(child_node)
 
                 # Update parent nodes list:
@@ -68,7 +70,9 @@ class Document:
                 prev_top_left_x_val = top_left_x_val
                 layer_num += 1
             else:
-                self.annotation_list.extend(paragraph_list)
+                for paragraph in paragraph_list:
+                    sentences = Sentence.get_sentences_from_paragraph(paragraph['word_list'], paragraph['entity_list'], paragraph['syntax_list'])
+                    self.annotation_list.append({ 'sentences': sentences, 'paragraph': paragraph, 'text': paragraph['text'] })
                 break
 
     @staticmethod
@@ -86,6 +90,7 @@ class Document:
         TODO:
             * Think of a way to make this better because might have to distinguish
               between a diagram and text files.
+            * Use convolution and then find the peaks in the graph
         """
         paragraph_list = [paragraph for paragraph in paragraph_list if paragraph['bounding_box']['top_left']['x'] >= prev_top_left_x_val ]
         x_val_list = [ paragraph['bounding_box']['top_left']['x'] for paragraph in paragraph_list[:5]]
@@ -158,7 +163,9 @@ class Document:
             if parent_idx != []:
                 parent_node_idx_list.append(parent_idx[-1])
             else:
-                self.annotation_list.append(layer_list[idx])
+                paragraph = layer_list[idx]
+                sentences = Sentence.get_sentences_from_paragraph(paragraph['word_list'], paragraph['entity_list'], paragraph['syntax_list'])
+                self.annotation_list.append({ 'sentences': sentences, 'paragraph': paragraph, 'text': paragraph['text'] })
                 remove_idx_list.append(idx)
         
         # Removing extra indices that can't be matched with a parent node
@@ -217,14 +224,12 @@ class Document:
             prev_node = node
             
             # Appends 
-            temp_sentence_list =sent_tokenize(node.text)
-            sentence_list.extend(temp_sentence_list)
-            question_starter_list.extend([question_starter] * len(temp_sentence_list))
+            sentence_list.extend(node.sentences)
+            question_starter_list.extend([question_starter] * len(node.sentences))
 
         for annotation in self.annotation_list:
-            temp_sentence_list = sent_tokenize(annotation['text'])
-            sentence_list.extend(temp_sentence_list)
-            question_starter_list.extend([''] * len(temp_sentence_list))
+            sentence_list.extend(annotation['sentences'])
+            question_starter_list.extend([''] * len(annotation['sentences']))
 
         questions, question_starters = Document.questions_from_sentlist(sentence_list, question_starter_list)
         if not questions:
@@ -240,6 +245,7 @@ class Document:
 
         return temp_terms, temp_definitions
 
+
     def get_question_starter(self, node=None, text=''):
         question_starter = ''
 
@@ -253,22 +259,20 @@ class Document:
         Creates questions from a list of sentences
 
         Args:
-            sentence_list (list): a list of strings denoting the sentences
+            sentence_list (list): a list of Sentence objects denoting the sentences
 
         Returns:
             questions ([Question]): list of question objects
             question_starters (list): list of strings that are used to preface the question
         """
         try:
-            sent_scores = requests.post('http://localhost:8080/' + 'get_sent_scores', json={"sentences": sentence_list}).json()
+            sent_scores = requests.post('http://localhost:8080/' + 'get_sent_scores', json={"sentences": [str(sentence) for sentence in sentence_list]}).json()
         except:
             return None, None
-        sentenceObjList = Sentence.init_sentences(sentence_list)
-        #sentenceObjList = Sentence.update_subject(sentenceObjList)
 
         # sorts sentences by score and takes the first few sentences and creates fib questions
         num_questions = int(len(sentence_list)*0.3)
-        ranked_sentences = sorted(((sent_scores[str(i)], s, question_starter_list[i]) for i,s in enumerate(sentenceObjList)), reverse=True, key=lambda s: s[0])
+        ranked_sentences = sorted(((sent_scores[str(i)], s, question_starter_list[i]) for i,s in enumerate(sentence_list)), reverse=True, key=lambda s: s[0])
         questions = [ ( Question(sent[1]), sent[2] ) for sent in ranked_sentences[:num_questions] if Question.is_question(sent[1])]
         if not questions:
             return None, None
