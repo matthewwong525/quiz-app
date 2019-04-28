@@ -301,7 +301,8 @@ class ParagraphHelper:
                 paragraphs = [ self.get_paragraph_obj(paragraph) for paragraph in temp_paragraphs ]
                 paragraph_list.extend(paragraphs)
             prev_line = line
-
+        
+        
         return paragraph_list
              
 

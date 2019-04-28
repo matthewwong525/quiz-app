@@ -34,7 +34,7 @@ class Word:
             entity (obj): entity object from NLP lib
         """
         entity_type = ('UNKNOWN', 'PERSON', 'LOCATION', 'ORGANIZATION',
-                       'EVENT', 'WORK_OF_ART', 'CONSUMER_GOOD', 'OTHER')
+                       'EVENT', 'WORK_OF_ART', 'CONSUMER_GOOD', 'OTHER', 'PHONE_NUMBER', 'ADDRESS', 'DATE', 'NUMBER', 'PRICE')
         self.entity = entity_type[entity]
         self.salience = salience
         self.content = content
@@ -84,56 +84,66 @@ class Word:
                         temp_list.append(Word(token=token))
                         remaining_word = remaining_word.replace(token_text, '', 1)
                     else:
-                        print(token_text)
-                        print(remaining_word)
-                        print(text_list[i])
                         raise Exception('Internal NLP Error')
                 word_obj_list.append(temp_list)
                 count += 1
 
             # multiple words per token
             elif text_list[i] in token_text:
-                word_obj_list.append(Word(token=token))
+                word_obj_list.append([Word(token=token)])
                 if token_text[-len(text_list[i]):] == text_list[i]:
                     count += 1
             else:
                 word_obj_list.append([Word(text=word)])
-
-        word_obj_list = Word.update_words(word_obj_list, client)
-
         return word_obj_list
 
 
     @staticmethod
-    def update_words(word_obj_list, client):
+    def analyze_text_entities(text):
+        if isinstance(text, six.binary_type):
+            text = text.decode('utf-8')
+        client = language.LanguageServiceClient()
+
         # Instantiates a plain text document.
         document = types.Document(
             content=text,
             type=enums.Document.Type.PLAIN_TEXT)
 
         entities = client.analyze_entities(document, encoding_type='UTF8').entities
+        ent_obj_list = [None] * len(text.split(' '))
 
+        consumed_ent_idx = []
         for entity in entities:
             for mention in entity.mentions:
                 if entity.name != mention.text.content:
                     continue
 
                 ent_location = mention.text.begin_offset
-                ent_idx = len(text[:ent_location].split(' ')) - 2
+                words = text.encode('utf-8')[:ent_location].decode('utf-8').split(' ')
+                ent_idx = len([w for w in words if w != ''])
+
                 for i, word in enumerate(entity.name.split(' ')): 
-                    if i+ent_idx >= len(word_obj_list):
+                    if i+ent_idx >= len(ent_obj_list) or i+ent_idx in consumed_ent_idx:
                         break
+                    consumed_ent_idx.append(i+ent_idx)
                     ent_type = entity.type
                     ent_salience = entity.salience
                     ent_content = entity.name
                     ent_wiki = entity.metadata.wikipedia_url if hasattr(entity, 'metadata') and hasattr(entity.metadata, 'wikipedia_url') else None
-                    word_obj_list[ent_idx+i].add_entity(ent_type, ent_salience, ent_content, ent_wiki)
+                    ent_obj_list[ent_idx+i] = {
+                        'type': ent_type,
+                        'salience': ent_salience,
+                        'content': ent_content,
+                        'wiki': ent_wiki
+                    }
+        return ent_obj_list
 
-        return word_obj_list
 
     def __str__(self):
         return self.content
 
 if __name__ == "__main__":
-    Word.analyze_text_entities('hello, King Arthur is my lord and saviour.')
+    a = Word.analyze_text_entities("past ? •••• King Arthur is cool and the Bishop is cool")
+    print([entity['content'] if entity else None for entity in a])
+    #print(' '.join([''.join([str(word) for word in words]) for words in a]))
 
