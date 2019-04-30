@@ -14,7 +14,7 @@ class Word:
         if text:
             self.content = text
             self.part_of_speech = 'UNKNOWN'
-        if token:
+        elif token:
             pos_tag = (
             'UNKNOWN', 'ADJ', 'ADP', 'ADV', 'CONJ', 'DET', 'NOUN', 'NUM', 'PRON', 'PRT', 'PUNCT', 'VERB', 'X', 'AFFIX')
             self.content = token.text.content
@@ -98,6 +98,7 @@ class Word:
                     count += 1
             else:
                 word_obj_list.append([Word(text=word)])
+
         return word_obj_list
 
 
@@ -146,7 +147,7 @@ class Word:
         return self.content
 
 if __name__ == "__main__":
-    a = Word.analyze_text_syntax("I cannot couldn't wouldn't eat food")
+    a = Word.analyze_text_syntax("• I cannot couldn't • wouldn't eat food")
     #print([entity['content'] if entity else None for entity in a])
-    print(' '.join([''.join([str(word) for word in words]) for words in a]))
+    print([''.join([str(word) for word in words]) for words in a])
 

@@ -10,6 +10,8 @@ from lib.Vision import Vision
 from lib.Document import Document
 from lib.Paragraph import ParagraphHelper
 from lib.Quizlet import Quizlet
+from lib.scripts import text_summarize
+import nltk
 
 from anytree import RenderTree
 from anytree.exporter import DictExporter
@@ -22,8 +24,16 @@ env = Environment(
 )
 template = env.get_template('test_result_template.html')
 
+WORD_EMBEDDINGS = None
 
+def init_server():
+    # intialize model for extractive summary
+    global WORD_EMBEDDINGS
+    nltk.download('punkt') # one time execution
+    nltk.download('stopwords')
+    WORD_EMBEDDINGS = text_summarize.extract_word_vec()
 
+    print('initialized server')
 
 def test_case(path):
     results = {}
@@ -76,7 +86,7 @@ def test_case(path):
 
     tests[1] = True
 
-    d = Document(paragraph_list, p.avg_symbol_width, p.avg_symbol_height)
+    d = Document(paragraph_list, p.avg_symbol_width, p.avg_symbol_height, WORD_EMBEDDINGS)
     results['avg_symbol_width'] = d.symbol_width
     results['avg_symbol_height'] = d.symbol_height
     #results['doc_structure'] = DictExporter().export(d.root_node)
@@ -123,6 +133,7 @@ def print_tests(tests, test_defs):
 
 
 if __name__ == "__main__":
+    init_server()
     mypath = 'test_imgs/'
     files = []
 

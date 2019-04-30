@@ -61,12 +61,6 @@ def log_upload_req(json_rows):
     if errors:
         print("Big Query Error: %s" % errors)
 
-@app.route('/get_sent_scores', methods=['POST'])
-def get_sent_scores():
-    body = request.get_json()
-    sentences = text_summarize.get_sent_scores(WORD_EMBEDDINGS, body['sentences'])
-    return jsonify( sentences )
-
 @app.route('/')
 def hello():
     """Return a friendly HTTP greeting."""
@@ -107,7 +101,7 @@ def upload_file():
 
     p = vis.get_paragraph_helper()
     paragraph_list = p.get_paragraph_list()
-    d = Document(paragraph_list, p.avg_symbol_width, p.avg_symbol_height)
+    d = Document(paragraph_list, p.avg_symbol_width, p.avg_symbol_height, WORD_EMBEDDINGS)
     terms, definitions = d.create_questions()
 
     if not (terms and definitions):
@@ -117,13 +111,13 @@ def upload_file():
         'filename': file.filename,
         'ext': file.filename.rsplit('.', 1)[1].lower(),
         'paragraph_list': [paragraph['text'] for paragraph in paragraph_list],
-        'doc_struct': json.dumps(DictExporter().export(d.root_node)),
+        'doc_struct': json.dumps(DictExporter(attriter=lambda attrs: [(k, v) for k, v in attrs if k == "text"]).export(d.root_node)),
         'doc_border': {
             'top_left': { 'x': float(vis.doc_border[0][0]), 'y': float(vis.doc_border[0][1]) },
             'top_right': { 'x': float(vis.doc_border[1][0]), 'y': float(vis.doc_border[1][1]) },
             'bot_left': { 'x': float(vis.doc_border[3][0]), 'y': float(vis.doc_border[3][1]) },
             'bot_right': { 'x': float(vis.doc_border[2][0]), 'y': float(vis.doc_border[2][1]) }
-        } if vis.doc_border else None,
+        } if vis.doc_border is not None else None,
         'img_scale': vis.image_scale,
         'corrected_perspective': vis.is_corrected_perspective,
         'terms': terms,

@@ -7,9 +7,10 @@ from lib.Quizlet import Quizlet
 import re
 import requests
 from flask import request
+from lib.scripts import text_summarize
 
 class Document:
-    def __init__(self, paragraph_list, symbol_width, symbol_height):
+    def __init__(self, paragraph_list, symbol_width, symbol_height, WORD_EMBEDDINGS):
         """
         Creates a tree structure that outlines the nested structure of the document
 
@@ -33,6 +34,7 @@ class Document:
         self.annotation_list = []
         self.symbol_width = symbol_width
         self.symbol_height = symbol_height
+        self.WORD_EMBEDDINGS = WORD_EMBEDDINGS
 
         # Removes paragraphs that does not contain letters or numbers
         paragraph_list = [paragraph for paragraph in paragraph_list if re.search('\w', paragraph['text'])]
@@ -231,7 +233,7 @@ class Document:
             sentence_list.extend(annotation['sentences'])
             question_starter_list.extend([''] * len(annotation['sentences']))
 
-        questions, question_starters = Document.questions_from_sentlist(sentence_list, question_starter_list)
+        questions, question_starters = self.questions_from_sentlist(sentence_list=sentence_list, question_starter_list=question_starter_list)
         if not questions:
             print('Failed to score sentences')
             return terms, definitions
@@ -254,7 +256,7 @@ class Document:
         
         return question_starter
 
-    def questions_from_sentlist(sentence_list, question_starter_list):
+    def questions_from_sentlist(self, sentence_list, question_starter_list):
         """
         Creates questions from a list of sentences
 
@@ -266,13 +268,14 @@ class Document:
             question_starters (list): list of strings that are used to preface the question
         """
         try:
-            sent_scores = requests.post('http://localhost:8080/' + 'get_sent_scores', json={"sentences": [str(sentence) for sentence in sentence_list]}).json()
-        except:
+            sent_scores = text_summarize.get_sent_scores(self.WORD_EMBEDDINGS, [str(sentence) for sentence in sentence_list])
+        except Exception as e:
+            print(e)
             return None, None
 
         # sorts sentences by score and takes the first few sentences and creates fib questions
         num_questions = int(len(sentence_list)*0.3)
-        ranked_sentences = sorted(((sent_scores[str(i)], s, question_starter_list[i]) for i,s in enumerate(sentence_list)), reverse=True, key=lambda s: s[0])
+        ranked_sentences = sorted(((sent_scores[i], s, question_starter_list[i]) for i,s in enumerate(sentence_list)), reverse=True, key=lambda s: s[0])
         questions = [ ( Question(sent[1]), sent[2] ) for sent in ranked_sentences[:num_questions] if Question.is_question(sent[1])]
         if not questions:
             return None, None

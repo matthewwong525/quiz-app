@@ -54,7 +54,12 @@ class Question:
 
         # gets all the words in the sentence as a list of strings
         words = sentence.return_string().split()
-        if len(entities) == 0 or len(sentence.words) <= 1 or max_salience < 0.1 or ('VERB' not in pos_list) or not word_answers:
+        if len(entities) == 0 or len(sentence.words) <= 1 or ('VERB' in pos_list) or word_answers is []:
+            print('VERB' in pos_list)
+            print(len(sentence.words) <= 1)
+            print(len(entities) == 0)
+            print(word_answers is [])
+            print('')
             return False
 
         return True
