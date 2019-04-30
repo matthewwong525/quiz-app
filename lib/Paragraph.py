@@ -26,12 +26,13 @@ class ParagraphHelper:
             # helper function which is an alternate way to initalize the ParagraphHelper Class
             self.seperate_to_words(doc)
 
-        # Performing NLP here
-        text = ' '.join([word['text'].replace(' ', '') for word in self.word_list])
-        self.syntax_list = Word.analyze_text_syntax(text)
-        self.entity_list = Word.analyze_text_entities(text)
-        assert(len(self.word_list) == len(self.syntax_list))
-        assert(len(self.word_list) == len(self.entity_list))
+        if hasattr(self, 'word_list'):
+            # Performing NLP here
+            text = ' '.join([word['text'].replace(' ', '') for word in self.word_list])
+            self.syntax_list = Word.analyze_text_syntax(text)
+            self.entity_list = Word.analyze_text_entities(text)
+            assert(len(self.word_list) == len(self.syntax_list))
+            assert(len(self.word_list) == len(self.entity_list))
 
     @staticmethod
     def get_width_height(bounding_box):

@@ -137,7 +137,7 @@ if __name__ == "__main__":
     mypath = 'test_imgs/'
     files = []
 
-    ignore_dirs = ['processed', 'not_working', 'working']
+    ignore_dirs = ['processed', 'test', 'working']
 
     for (dirpath, dirnames, filenames) in walk(mypath):
         if dirpath.replace(mypath, '').split('/')[0] not in ignore_dirs:

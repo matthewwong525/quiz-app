@@ -35,7 +35,8 @@ class Word:
         """
         entity_type = ('UNKNOWN', 'PERSON', 'LOCATION', 'ORGANIZATION',
                        'EVENT', 'WORK_OF_ART', 'CONSUMER_GOOD', 'OTHER', 'PHONE_NUMBER', 'ADDRESS', 'DATE', 'NUMBER', 'PRICE')
-        self.entity = entity_type[entity]
+
+        self.entity = entity_type[entity] if entity < len(entity_type) else entity_type[0]
         self.salience = salience
         self.content = content
         self.wiki = wiki

@@ -28,7 +28,11 @@ class Question:
         # keep only the words that are entities
         words = [word for word in words if word.entity and len(str(word)) > 1]
 
-        answer = words[0]
+        answer = words[0] if words else None
+
+        if not answer:
+            return None
+
         # replace the word being used as answer with a blank
         for i, word in enumerate(self.sentence.words):
             if word == answer:
@@ -54,12 +58,7 @@ class Question:
 
         # gets all the words in the sentence as a list of strings
         words = sentence.return_string().split()
-        if len(entities) == 0 or len(sentence.words) <= 1 or ('VERB' in pos_list) or word_answers is []:
-            print('VERB' in pos_list)
-            print(len(sentence.words) <= 1)
-            print(len(entities) == 0)
-            print(word_answers is [])
-            print('')
+        if len(entities) == 0 or len(sentence.words) <= 1 or ('VERB' in pos_list) or not word_answers:
             return False
 
         return True
