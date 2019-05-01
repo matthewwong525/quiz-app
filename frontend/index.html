@@ -40,15 +40,16 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarResponsive">
         <ul class="navbar-nav ml-auto">
+            <li class="nav-item mx-0 mx-lg-1">
+            <a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger" href="#contact">Examples</a>
+          </li>
           <li class="nav-item mx-0 mx-lg-1">
             <a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger" href="#howitworks">How to Use</a>
           </li>
           <li class="nav-item mx-0 mx-lg-1">
             <a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger" href="#about">Results</a>
           </li>
-          <li class="nav-item mx-0 mx-lg-1">
-            <a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger" href="#contact">Examples</a>
-          </li>
+          
         </ul>
       </div>
     </div>
@@ -108,63 +109,7 @@
   </header>
 
   <!-- Portfolio Grid Section -->
-  <section class="portfolio" id="howitworks">
-    <div class="container">
-      <h2 class="text-center text-uppercase text-secondary mb-0">How to Use</h2>
-      <hr class="star-dark mb-5">
-      <div class="h3">
-          <p>
-              1. Upload File
-          </p>
-          <p>
-              2. Submit File
-          </p>
-          <p>
-              3. Wait for processing (typically ~5s)
-          </p>
-          <p>
-              4. Click the Quizlet Button!
-          </p>
-      </div>
-    </div>
-  </section>
-
-  <!-- About Section -->
-  <section class="bg-primary text-white mb-0" id="about">
-    <div class="container">
-      <h2 class="text-center text-uppercase text-white">Results</h2>
-      <hr class="star-light mb-5">
-      <div class="container">
-        <p class="lead">The question sets produced by this app are stored in Quizlet after the processing is complete. The app produces 2 types of questions: a property question or a fill in the blank question. A third type, diagram questions is under construction</p>
-        <p class="lead">Property questions are determined by the interpreted document structure and fill in the blank questions are determined by removing the key words from sentences in your image.</p>
-      </div>
-      <br>
-      <div class="row container">
-            <h4 class="text-center text-uppercase text-white col-xl-2">
-                Property Question
-            </h4>
-            <div class="col-xl-10">
-                <img class="img-fluid" src="/static/img/examples/property_question.png" alt="">
-            </div>
-      </div>
-      <hr>
-      <div class="row container">
-            <h4 class="text-center text-uppercase text-white col-xl-2">
-                Fill in Blank Question
-            </h4>
-            <div class="col-xl-10">
-                <img class="img-fluid" src="/static/img/examples/fib_question.png" alt="">
-            </div>
-      </div>
-
-    </div>
-  </section>
-
-
-
-
-  <!-- Contact Section -->
-  <section class="portfolio" id="contact">
+    <section class="portfolio" id="contact">
     <div class="container">
       <h2 class="text-center text-uppercase text-secondary mb-0">Examples</h2>
       <hr class="star-dark mb-5">
@@ -199,7 +144,6 @@
             <img class="img-fluid" src="/static/img/examples/cropped/philosophy.png" alt="">
           </a>
         </div>
-        <!--
         <div class="col-md-6 col-lg-4">
           <a class="portfolio-item d-block mx-auto" href="#portfolio-modal-4">
             <div class="portfolio-item-caption d-flex position-absolute h-100 w-100">
@@ -207,7 +151,7 @@
                 <i class="fas fa-search-plus fa-3x"></i>
               </div>
             </div>
-            <img class="img-fluid" src="/static/img/portfolio/game.png" alt="">
+            <img class="img-fluid" src="/static/img/examples/cropped/nutrition_txtbk.jpg" alt="">
           </a>
         </div>
         <div class="col-md-6 col-lg-4">
@@ -217,7 +161,7 @@
                 <i class="fas fa-search-plus fa-3x"></i>
               </div>
             </div>
-            <img class="img-fluid" src="/static/img/portfolio/safe.png" alt="">
+            <img class="img-fluid" src="/static/img/examples/cropped/written_notes.jpg" alt="">
           </a>
         </div>
         <div class="col-md-6 col-lg-4">
@@ -227,13 +171,69 @@
                 <i class="fas fa-search-plus fa-3x"></i>
               </div>
             </div>
-            <img class="img-fluid" src="/static/img/portfolio/submarine.png" alt="">
+            <img class="img-fluid" src="/static/img/examples/cropped/anatomy2.jpg" alt="">
           </a>
         </div>
-        -->
       </div>
     </div>
   </section>
+  
+  <section class="bg-primary text-white mb-0" id="howitworks">
+    <div class="container">
+      <h2 class="text-center text-uppercase text-white">How to Use</h2>
+      <hr class="star-light mb-5">
+      <div class="h3">
+          <p>
+              1. Upload File
+          </p>
+          <p>
+              2. Submit File
+          </p>
+          <p>
+              3. Wait for processing (typically ~5s)
+          </p>
+          <p>
+              4. Click the Quizlet Button!
+          </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section class="portfolio" id="about">
+    <div class="container">
+      <h2 class="text-center text-uppercase text-secondary mb-0">Results</h2>
+      <hr class="star-dark mb-5">
+      <div class="container">
+        <p class="lead">The question sets produced by this app are stored in Quizlet after the processing is complete. The app produces 2 types of questions: a property question or a fill in the blank question. A third type, diagram questions is under construction</p>
+        <p class="lead">Property questions are determined by the interpreted document structure and fill in the blank questions are determined by removing the key words from sentences in your image.</p>
+      </div>
+      <br>
+      <div class="row container">
+            <h4 class="text-center text-uppercase col-xl-2">
+                Property Question
+            </h4>
+            <div class="col-xl-10">
+                <img class="img-fluid" src="/static/img/examples/property_question.png" alt="">
+            </div>
+      </div>
+      <hr>
+      <div class="row container">
+            <h4 class="text-center text-uppercase col-xl-2">
+                Fill in Blank Question
+            </h4>
+            <div class="col-xl-10">
+                <img class="img-fluid" src="/static/img/examples/fib_question.png" alt="">
+            </div>
+      </div>
+
+    </div>
+  </section>
+
+
+
+
+  
 
 
   <!-- Footer 
@@ -318,30 +318,11 @@
         </div>
       </div>
         <div class="row">
-            <div class="col-lg-4">
+            <div class="col-lg-6">
                 <h5>Original Pic</h5>
                 <img class="img-fluid" src="/static/img/examples/original/history.png" alt="">
             </div>
-            <div class="col-lg-4">
-                <h5>Document Structure</h5>
-                <pre>
-├── 3 Scientific Revolution
-│   └── • Scientific Age Cobservation, experimentation, analysis 
-├── -Medieval world views 
-│   ├── • Emotionally sutifying Chumans @ center of world) 
-│   ├── • Theology was &#34;Queen of sciences 
-│   │   └── 4 covered morality, who to many creation, everything)
-│   │   └── A Nature Wasn&#39;t important, God was
-│   └── · Limited hierarchical.coomoos
-│       └── Loldet-cosmos. what you can see 
-└── → Aristotle
-    ├── • Everything made of 4 elements : Earth, wind, five, water 
-    └── a “Aristotelian - Ptolemaic&#39; system
-        ├── to Earth is at center, planets/sun revolue 
-        ├── ✓ Earth has perfect orbit and pland&#39;s perfect sphels 
-        └── &gt; God makes it perfect.</pre>
-            </div>
-            <div class="col-lg-4">
+            <div class="col-lg-6">
                 <h5>Questions</h5>
                 <iframe class="h-100" src="https://quizlet.com/390437480/flashcards/embed?x=1jj1" width="100%" style="border:0"></iframe>
             </div>
@@ -373,37 +354,11 @@
         </div>
       </div>
         <div class="row">
-            <div class="col-lg-4">
+            <div class="col-lg-6">
                 <h5>Original Pic</h5>
                 <img class="img-fluid" src="/static/img/examples/original/anatomy.jpg" alt="">
             </div>
-            <div class="col-lg-4">
-                <h5>Document Structure</h5>
-                <pre>
-├── Elbow Joint
-│   ├── Consists of both humeroulnar and humeroradial articulations
-│   │   ├── •Trochlea of the humerus articulates with the trochlear notch of the ulna 
-│   │   └── Capitulum of the humerus articulates with the head of the radius
-│   │       └── movement in Taxis 
-│   ├── Classified as a hinge, synovial joint
-│   ├── Allows flexion and extension only
-│   └── Fibrous joint capsule surrounds both articulations plus the proximal radioulnar articulation
-├── Ligaments of the Elbow Joint
-│   ├── Intrinsic ligaments:
-│   │   ├── Radial collateral ligament
-│   │   │   └── 4 side 
-│   │   ├── Ulnar collateral ligament
-│   │   └── •Anular ligament
-│   ├── Radial and ulnar collateral ligaments are both triangular in shape 
-│   ├── Radial collateral ligament blends into the anular ligament distally bine ligament instal of
-│   └── Anular ligament encircles the head of the radius, allowing it to pivot during pronation and supination
-└── Ulnar Collateral Ligament Reconstruction
-    ├── Often referred to as Tommy John surgery
-    ├── Commonly required for baseball pitchers who have stretched, torn, or ruptured their ulnar collateral  ligament
-    ├── Surgeon will use a tendon from either palmaris  longus (forearm muscle) or plantaris (leg muscle)  to reconstruct an ulnar collateral ligament
-    └── Many pitchers now return to play post-surgery</pre>
-            </div>
-            <div class="col-lg-4">
+            <div class="col-lg-6">
                 <h5>Questions</h5>
                 <iframe class="h-100" src="https://quizlet.com/390430433/flashcards/embed?x=1jj1" width="100%" style="border:0"></iframe>
             </div>
@@ -436,38 +391,11 @@
         </div>
       </div>
         <div class="row">
-            <div class="col-lg-4">
+            <div class="col-lg-6">
                 <h5>Original Pic</h5>
                 <img class="img-fluid" src="/static/img/examples/original/philosophy.png" alt="">
             </div>
-            <div class="col-lg-4">
-                <h5>Document Structure</h5>
-                <pre>
-├── Why bother studying the worldviews of the past?
-│   ├── • They teach us that there can be a genuine science with a different scientific method
-│   │   └── o Their science obeyed the 4 laws of scientific change 
-│   └── • If we dismissed their science as non-science, we would have to be prepared for our science to be dismissed by future scientists 
-├── Key elements of the Aristotelian-Medieval mosaic
-│   └── Accepted until end of 17th century  Natural philosophy (physics) Humorist Physiology, Astrology, Cosmology, Theology,  Metaphysics, Mathematics, Natural History, Optics, Aristotelian-Medieval method
-├── Aristotelian Physics
-│   ├── • 4 elements: water &amp; earth (heavy), air &amp; fire (light) 
-│   ├── • Lawof Natural Motion-all elements in their natural state tend to reachtheir natural  positions andremain there 
-│   │   ├── o Law of Natural Motion (Heavy)-heavy elements tend towards the centre of the universe 
-│   │   └── o Law of Natural Motion (Light)- light elements tend towards the periphery of the terrestrialregion 
-│   ├── • The idea of the 4 elements was very intuitive  4 terrestrial elements characterized by sensible qualities (hot &amp; cold, wet &amp; dry)
-│   │   └── o Fire is dry and hot, earth is dry and cold, airis wet and hot water is wet and cold 
-│   ├── Transfomability-elements can transform to one another
-│   │   ├── O Heating water changes its quality from cold to hot → tums into air 
-│   │   └── o Firewood made of earth and water (cold). In combustion, tums into fire and air (hot) 
-│   └── • Because transformability existed, there existed the scientific Possibility of Alchemy-it is reasonable to search for elixirs and philosopher&#39;s stones. 
-└── Humorist Physiology &amp; Medicine
-    ├── •Human body contains 4 bodily fluids-four humors, and each humor has a predominant  element 
-    │   └── o Blood (air), yellow bile (fire), black bile earth), phlegm (water)
-    │       ├── Humors are combinations of all elements, but one is predominant
-    │       └── • They can be characterized hot or cold wet or dry 
-    └── Temperament - a specific balance of the four humors peculiar to the individual</pre>
-            </div>
-            <div class="col-lg-4">
+            <div class="col-lg-6">
                 <h5>Questions</h5>
                 <iframe class="h-100" src="https://quizlet.com/390444276/flashcards/embed?x=1jj1" width="100%" style="border:0"></iframe>
             </div>
@@ -493,17 +421,31 @@
       </a>
       <div class="container text-center">
         <div class="row">
-          <div class="col-lg-8 mx-auto">
-            <h2 class="text-secondary text-uppercase mb-0">Project Name</h2>
-            <hr class="star-dark mb-5">
-            <img class="img-fluid mb-5" src="/static/img/portfolio/game.png" alt="">
-            <p class="mb-5">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Mollitia neque assumenda ipsam nihil, molestias magnam, recusandae quos quis inventore quisquam velit asperiores, vitae? Reprehenderit soluta, eos quod consequuntur itaque. Nam.</p>
-            <a class="btn btn-primary btn-lg rounded-pill portfolio-modal-dismiss" href="#">
-              <i class="fa fa-close"></i>
-              Exit</a>
-          </div>
+            <div class="col-lg-8 mx-auto">
+                <h2 class="text-secondary text-uppercase mb-0">Nutrition Textbook</h2>
+                <hr class="star-dark mb-5">
+            </div>
         </div>
       </div>
+        <div class="row">
+            <div class="col-lg-6">
+                <h5>Original Pic</h5>
+                <img class="img-fluid" src="/static/img/examples/original/nutrition_txtbk.jpg" alt="">
+            </div>
+            <div class="col-lg-6">
+                <h5>Questions</h5>
+                <iframe class="h-100" src="https://quizlet.com/396977570/flashcards/embed?i=18dj5o&x=1jj1" width="100%" style="border:0"></iframe>
+            </div>
+        </div>
+        <div class="container text-center">
+            <br>
+            <br>
+            <hr>
+            <p class="mb-5">Quizlet URL: <a href="https://quizlet.com/ca/396977570/test_imgstestnutrition_txtbk-question-set-flash-cards/">https://quizlet.com/ca/396977570/test_imgstestnutrition_txtbk-question-set-flash-cards/</a> </p>
+            <a class="btn btn-primary btn-lg rounded-pill portfolio-modal-dismiss" href="#">
+              <i class="fa fa-close"></i>
+              Exit Window</a>
+        </div>
     </div>
   </div>
 
@@ -515,17 +457,31 @@
       </a>
       <div class="container text-center">
         <div class="row">
-          <div class="col-lg-8 mx-auto">
-            <h2 class="text-secondary text-uppercase mb-0">Project Name</h2>
-            <hr class="star-dark mb-5">
-            <img class="img-fluid mb-5" src="/static/img/portfolio/safe.png" alt="">
-            <p class="mb-5">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Mollitia neque assumenda ipsam nihil, molestias magnam, recusandae quos quis inventore quisquam velit asperiores, vitae? Reprehenderit soluta, eos quod consequuntur itaque. Nam.</p>
-            <a class="btn btn-primary btn-lg rounded-pill portfolio-modal-dismiss" href="#">
-              <i class="fa fa-close"></i>
-              Exit</a>
-          </div>
+            <div class="col-lg-8 mx-auto">
+                <h2 class="text-secondary text-uppercase mb-0">Written Notes</h2>
+                <hr class="star-dark mb-5">
+            </div>
         </div>
       </div>
+        <div class="row">
+            <div class="col-lg-6">
+                <h5>Original Pic</h5>
+                <img class="img-fluid" src="/static/img/examples/original/written_notes.jpg" alt="">
+            </div>
+            <div class="col-lg-6">
+                <h5>Questions</h5>
+                <iframe class="h-100" src="https://quizlet.com/396977806/flashcards/embed?i=18dj5o&x=1jj1" width="100%" style="border:0"></iframe>
+            </div>
+        </div>
+        <div class="container text-center">
+            <br>
+            <br>
+            <hr>
+            <p class="mb-5">Quizlet URL: <a href="https://quizlet.com/ca/396977806/test_imgstestwritten_notes-question-set-flash-cards/">https://quizlet.com/ca/396977806/test_imgstestwritten_notes-question-set-flash-cards/</a> </p>
+            <a class="btn btn-primary btn-lg rounded-pill portfolio-modal-dismiss" href="#">
+              <i class="fa fa-close"></i>
+              Exit Window</a>
+        </div>
     </div>
   </div>
 
@@ -537,17 +493,31 @@
       </a>
       <div class="container text-center">
         <div class="row">
-          <div class="col-lg-8 mx-auto">
-            <h2 class="text-secondary text-uppercase mb-0">Project Name</h2>
-            <hr class="star-dark mb-5">
-            <img class="img-fluid mb-5" src="/static/img/portfolio/submarine.png" alt="">
-            <p class="mb-5">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Mollitia neque assumenda ipsam nihil, molestias magnam, recusandae quos quis inventore quisquam velit asperiores, vitae? Reprehenderit soluta, eos quod consequuntur itaque. Nam.</p>
-            <a class="btn btn-primary btn-lg rounded-pill portfolio-modal-dismiss" href="#">
-              <i class="fa fa-close"></i>
-              Exit</a>
-          </div>
+            <div class="col-lg-8 mx-auto">
+                <h2 class="text-secondary text-uppercase mb-0">Anatomy Notes</h2>
+                <hr class="star-dark mb-5">
+            </div>
         </div>
       </div>
+        <div class="row">
+            <div class="col-lg-6">
+                <h5>Original Pic</h5>
+                <img class="img-fluid" src="/static/img/examples/original/anatomy2.jpg" alt="">
+            </div>
+            <div class="col-lg-6">
+                <h5>Questions</h5>
+                <iframe class="h-100" src="https://quizlet.com/396977643/flashcards/embed?i=18dj5o&x=1jj1" width="100%" style="border:0"></iframe>
+            </div>
+        </div>
+        <div class="container text-center">
+            <br>
+            <br>
+            <hr>
+            <p class="mb-5">Quizlet URL: <a href="https://quizlet.com/ca/396977643/test_imgstestorig_anatomy-question-set-flash-cards/">https://quizlet.com/ca/396977643/test_imgstestorig_anatomy-question-set-flash-cards//</a> </p>
+            <a class="btn btn-primary btn-lg rounded-pill portfolio-modal-dismiss" href="#">
+              <i class="fa fa-close"></i>
+              Exit Window</a>
+        </div>
     </div>
   </div>
 
