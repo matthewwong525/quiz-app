@@ -11,6 +11,10 @@ RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 ADD . /app/
 
+# Download NLTK python dependencies
+RUN python -m nltk.downloader punkt
+RUN python -m nltk.downloader stopwords
+
 # Create credentials file
 #RUN gsutil cp -r gs://quiz-app1313.appspot.com/credentials .
 

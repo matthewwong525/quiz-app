@@ -35,22 +35,17 @@ app = Flask(__name__, template_folder=template_dir)
 ALLOWED_EXTENSIONS = set(['pdf', 'png', 'jpg', 'jpeg'])
 
 WORD_EMBEDDINGS = None
-bq_client = None
 
+@app.before_first_request
 def init_server():
     # intialize model for extractive summary
     global WORD_EMBEDDINGS
-    nltk.download('punkt') # one time execution
-    nltk.download('stopwords')
     WORD_EMBEDDINGS = text_summarize.extract_word_vec()
-
-    # intialize bigquery client
-    global bq_client
-    bq_client = bigquery.Client()
 
     print('initialized server')
 
 def log_upload_req(json_rows):
+    bq_client = bigquery.Client()
     dataset_id = 'logs'
     table_id = 'upload_post_requests'
     table_ref = bq_client.dataset(dataset_id).table(table_id)
@@ -127,7 +122,7 @@ def upload_file():
         'processed_img_bytes': base64.b64encode(vis.process_img_bytes).decode("utf-8"),
         'ip_address': request.environ['REMOTE_ADDR']
     }
-    #base64.b64decode() to decode
+
     log_upload_req([bq_row_obj])
 
     return jsonify({'terms': terms, 'definitions': definitions})
@@ -155,9 +150,7 @@ def server_error(e):
     See logs for full stacktrace.
     """.format(e), 500
 
-
 if __name__ == '__main__':
-    init_server()
     # This is used when running locally. Gunicorn is used to run the
     # application on Google App Engine. See entrypoint in app.yaml.
     app.run(host='127.0.0.1', port=8080, debug=True)

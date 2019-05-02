@@ -13,7 +13,7 @@ import numpy as np
 from PIL import Image
 
 #image processing resources
-from skimage import img_as_float
+from skimage import img_as_float, img_as_ubyte
 from skimage.io import imread, imshow, imsave
 from skimage.filters import gaussian, threshold_otsu
 from skimage.feature import canny
@@ -39,7 +39,21 @@ class Vision():
         if file_ext.lower() == 'jpg':
             file_ext = 'jpeg'
 
-        content = img_file.read()
+        # resize image
+        img_obj = Image.open(img_file)
+        max_pix_area = 1200*1200
+        img_obj_size = img_obj.size[0] * img_obj.size[1]
+
+        if img_obj_size > max_pix_area:
+            print('resized image!')
+            ratio = max_pix_area / img_obj_size
+            reduced_size = int(img_obj.size[0] * ratio), int(img_obj.size[1] * ratio)
+            img_obj = img_obj.resize(reduced_size, Image.ANTIALIAS)
+
+        # Convert PIL obj to bytes
+        with io.BytesIO() as output:
+            img_obj.save(output,format=file_ext)
+            content = output.getvalue()
 
         # converts pdf to jpg if it detects that the document is a pdf
         if file_ext.lower() == 'pdf':
@@ -181,7 +195,7 @@ class Vision():
         Returns:
             contents (bytes): rotated image in bytes
         """
-        image = imread(self.process_img_bytes, plugin="imageio", as_gray=True)
+        image = img_as_ubyte(imread(self.process_img_bytes, plugin="imageio", as_gray=True))
 
         #threshold to get rid of extraneous noise
         thresh = threshold_otsu(image)
