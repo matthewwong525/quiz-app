@@ -8,6 +8,7 @@ import pdf2image
 import cv2
 import io
 import os
+import math
 
 import numpy as np
 from PIL import Image
@@ -39,14 +40,25 @@ class Vision():
         if file_ext.lower() == 'jpg':
             file_ext = 'jpeg'
 
-        # resize image
-        img_obj = Image.open(img_file)
+        # converts pdf to jpg if it detects that the document is a pdf
+        if file_ext.lower() == 'pdf':
+            file_ext = 'jpeg'
+            pdf_images = pdf2image.convert_from_bytes(img_file.read(), fmt=file_ext)
+            with io.BytesIO() as output:
+                # gets first page of pdf document!
+                pdf_images[0].save(output, file_ext)
+                content = output.getvalue()
+            img_obj = Image.open(io.BytesIO(content))
+        else:
+            img_obj = Image.open(img_file)
+
+        # resize image       
         max_pix_area = 1200*1200
         img_obj_size = img_obj.size[0] * img_obj.size[1]
 
         if img_obj_size > max_pix_area:
             print('resized image!')
-            ratio = max_pix_area / img_obj_size
+            ratio = math.sqrt(max_pix_area / img_obj_size)
             reduced_size = int(img_obj.size[0] * ratio), int(img_obj.size[1] * ratio)
             img_obj = img_obj.resize(reduced_size, Image.ANTIALIAS)
 
@@ -54,15 +66,6 @@ class Vision():
         with io.BytesIO() as output:
             img_obj.save(output,format=file_ext)
             content = output.getvalue()
-
-        # converts pdf to jpg if it detects that the document is a pdf
-        if file_ext.lower() == 'pdf':
-            file_ext = 'jpeg'
-            pdf_images = pdf2image.convert_from_bytes(content, fmt=file_ext)
-            with io.BytesIO() as output:
-                # gets first page of pdf document!
-                pdf_images[0].save(output, file_ext)
-                content = output.getvalue()
 
         self.file_ext = file_ext
         self.file_name = file_name
@@ -80,6 +83,7 @@ class Vision():
         self.doc_border = self.get_doc_border()
         self.is_corrected_perspective = self.all_words_in_doc()
         if self.is_corrected_perspective:
+            print('corrected perspective!')
             self.correct_perspective()
         self.deskew()
 
@@ -173,8 +177,7 @@ class Vision():
             return False
         for word in self.word_list:
             for p in word['bounding_box'].vertices:
-                if not (mapper.check_in_polygon((p.x, p.y), self.doc_border) or mapper.check_in_polygon((p.x*0.90, p.y), self.doc_border)
-                    or mapper.check_in_polygon((p.x*1.10, p.y), self.doc_border)):
+                if not (mapper.check_in_polygon((p.x, p.y), self.doc_border)):
                     #print("%s.%s" % (self.file_name, self.file_ext))
                     #print(word['text'])
                     #print(p)

@@ -88,7 +88,9 @@ class Word:
                         print(token_text)
                         print(remaining_word)
                         print([str(word) for word in temp_list])
-                        raise Exception('Internal NLP Error')
+                        print('Internal NLP Error')
+                        count -= 1
+                        break
                 word_obj_list.append(temp_list)
                 count += 1
 

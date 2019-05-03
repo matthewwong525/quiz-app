@@ -269,13 +269,14 @@ class Document:
         """
         try:
             sent_scores = text_summarize.get_sent_scores(self.WORD_EMBEDDINGS, [str(sentence) for sentence in sentence_list])
+            ranked_sentences = sorted(((sent_scores[i], s, question_starter_list[i]) for i,s in enumerate(sentence_list)), reverse=True, key=lambda x: x[0])
         except Exception as e:
             print(e)
-            return None, None
+            max_salience_key = lambda x: max([word.salience for word in x[1].words])
+            ranked_sentences = sorted(((0, s, question_starter_list[i]) for i, s in enumerate(sentence_list)), reverse=True, key=max_salience_key)
 
         # sorts sentences by score and takes the first few sentences and creates fib questions
         num_questions = int(len(sentence_list)*0.3)
-        ranked_sentences = sorted(((sent_scores[i], s, question_starter_list[i]) for i,s in enumerate(sentence_list)), reverse=True, key=lambda s: s[0])
         questions = [ ( Question(sent[1]), sent[2] ) for sent in ranked_sentences[:num_questions] if Question.is_question(sent[1])]
         if not questions:
             return None, None
